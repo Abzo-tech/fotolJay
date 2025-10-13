@@ -1,0 +1,126 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== AUTHENTIFICATION ====================
+// Seulement pour Admin et Modérateurs
+
+model User {
+  id                  String   @id @default(uuid())
+  email               String   @unique
+  password            String
+  firstName           String   @map("first_name")
+  lastName            String   @map("last_name")
+  phone               String?
+  role                UserRole @default(SELLER)
+  isVip               Boolean  @default(false) @map("is_vip")
+  isActive            Boolean  @default(true) @map("is_active")
+  forcePasswordChange Boolean  @default(false) @map("force_password_change")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  notifications Notification[]
+  products      Product[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+enum UserRole {
+  SELLER
+  MODERATOR
+  ADMIN
+}
+
+// ==================== PRODUITS ====================
+// Les vendeurs publient sans compte, on stocke leurs infos directement
+
+model Product {
+  id          String        @id @default(uuid())
+  title       String
+  description String        @db.Text
+  status      ProductStatus @default(PENDING)
+  views       Int           @default(0)
+  isVip       Boolean       @default(false) @map("is_vip")
+
+  sellerId String @map("seller_id")
+  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  photos Photo[]
+
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([isVip])
+  @@index([publishedAt])
+  @@index([sellerId])
+  @@map("products")
+}
+
+enum ProductStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+// ==================== PHOTOS ====================
+
+model Photo {
+  id        String   @id @default(uuid())
+  url       String
+  publicId  String?  @map("public_id") // Cloudinary public ID pour suppression
+  isPrimary Boolean  @default(false) @map("is_primary")
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([productId])
+  @@map("photos")
+}
+
+// ==================== NOTIFICATIONS ====================
+// Notifications par email pour les vendeurs (pas de compte) et utilisateurs authentifiés
+
+model Notification {
+  id      String           @id @default(uuid())
+  type    NotificationType
+  message String           @db.Text
+  
+  // Pour les utilisateurs authentifiés
+  userId  String? @map("user_id")
+  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isRead  Boolean @default(false) @map("is_read")
+  
+  // Email du vendeur pour l'envoi de notification (pour vendeurs sans compte)
+  recipientEmail String @map("recipient_email")
+  productId      String? @map("product_id")
+  
+  sent      Boolean  @default(false) // Si l'email a été envoyé
+  sentAt    DateTime? @map("sent_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([recipientEmail])
+  @@index([sent])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  PRODUCT_APPROVED
+  PRODUCT_REJECTED
+  PRODUCT_EXPIRING
+  PRODUCT_EXPIRED
+  GENERAL
+}

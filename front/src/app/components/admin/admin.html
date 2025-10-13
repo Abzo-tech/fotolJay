@@ -1,0 +1,325 @@
+<div class="admin-page">
+  <!-- Navigation Admin -->
+  <nav class="navbar admin-navbar">
+    <div class="navbar-left">
+      <a class="navbar-brand" href="_">
+        <img src="/assets/images/logo.png" alt="Fotoljay Logo" class="brand-logo" />
+        <div class="brand-text">
+          <span class="brand-name">Fotoljay</span>
+          <span class="badge-admin">Admin</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <a routerLink="/" class="navbar-link">
+        <lucide-icon [img]="Home" [size]="20"></lucide-icon>
+        <span>Voir le site</span>
+      </a>
+
+      <!-- Theme Selector -->
+      <app-theme-selector></app-theme-selector>
+
+      <!-- Notification Bell -->
+      <app-notification-bell></app-notification-bell>
+
+      @if (authService.currentUser(); as user) {
+      <div class="user-info">
+        <div class="user-avatar-circle">
+          <lucide-icon [img]="User" [size]="20"></lucide-icon>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+          <span class="user-role">{{ user.role }}</span>
+        </div>
+      </div>
+      }
+
+      <button class="btn btn-logout" (click)="logout()">
+        <lucide-icon [img]="LogOut" [size]="20"></lucide-icon>
+        <span>Déconnexion</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Dashboard Content -->
+  <div class="admin-container">
+    <div class="dashboard-header">
+      <div class="header-content">
+        <h1 class="dashboard-title">
+          <lucide-icon [img]="Camera" [size]="32" class="title-icon"></lucide-icon>
+          Gestion des Produits
+        </h1>
+        <p class="dashboard-subtitle">
+          Modérez et gérez tous les produits de la plateforme Fotoljay
+        </p>
+      </div>
+      <div class="header-actions">
+        <div class="view-tabs">
+          <button
+            class="tab-button"
+            [class.active]="currentView() === 'pending'"
+            (click)="switchView('pending')"
+          >
+            <lucide-icon [img]="Clock" [size]="16"></lucide-icon>
+            En attente ({{ getPendingCount() }})
+          </button>
+          <button
+            class="tab-button"
+            [class.active]="currentView() === 'approved'"
+            (click)="switchView('approved')"
+          >
+            <lucide-icon [img]="CheckCircle" [size]="16"></lucide-icon>
+            Approuvés ({{ getApprovedCount() }})
+          </button>
+        </div>
+        <button
+          class="btn btn-primary"
+          (click)="currentView() === 'pending' ? loadPendingProducts() : loadApprovedProducts()"
+        >
+          <lucide-icon [img]="RefreshCw" [size]="18"></lucide-icon>
+          <span>Actualiser</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner-large"></div>
+      <p>Chargement des produits...</p>
+    </div>
+    }
+
+    <!-- Empty State -->
+    @else if (products().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <lucide-icon [img]="CheckCircle" [size]="64"></lucide-icon>
+      </div>
+      <h2>Aucun produit en attente</h2>
+      <p>Tous les produits ont été modérés. Excellent travail!</p>
+      <a routerLink="/" class="btn btn-secondary"> Voir les produits approuvés </a>
+    </div>
+    }
+
+    <!-- Products Grid -->
+    @else {
+    <div class="products-stats">
+      <div class="stat-card">
+        <lucide-icon [img]="Clock" [size]="32" class="stat-icon"></lucide-icon>
+        <div class="stat-content">
+          <span class="stat-value">{{ getPendingCount() }}</span>
+          <span class="stat-label">En attente</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <lucide-icon [img]="CheckCircle" [size]="32" class="stat-icon"></lucide-icon>
+        <div class="stat-content">
+          <span class="stat-value">{{ getApprovedCount() }}</span>
+          <span class="stat-label">Approuvés</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-products-grid">
+      @for (product of products(); track product.id) {
+      <div class="admin-product-card">
+        <div class="product-image-section">
+          <img
+            [src]="getPrimaryPhoto(product)"
+            [alt]="product.title"
+            class="product-main-image"
+            appNoDownload
+            (error)="$any($event.target).src = '/placeholder.svg'"
+          />
+          @if (product.photos.length > 1) {
+          <div class="product-thumbnails">
+            @for (photo of product.photos.slice(1, 4); track photo.id) {
+            <img
+              [src]="photo.url"
+              [alt]="'Photo ' + ($index + 2)"
+              class="thumbnail"
+              appNoDownload
+              (error)="$any($event.target).src = '/placeholder.svg'"
+            />
+            } @if (product.photos.length > 4) {
+            <div class="thumbnail-more">+{{ product.photos.length - 4 }}</div>
+            }
+          </div>
+          }
+        </div>
+
+        <div class="product-details-section">
+          <div class="product-header">
+            <div>
+              <h3 class="product-title">{{ product.title }}</h3>
+              @if (product.status === 'PENDING') {
+              <span class="badge badge-pending">
+                <lucide-icon [img]="Clock" [size]="14"></lucide-icon>
+                En attente
+              </span>
+              } @else if (product.status === 'APPROVED') {
+              <span class="badge badge-approved">
+                <lucide-icon [img]="CheckCircle" [size]="14"></lucide-icon>
+                Approuvé
+              </span>
+              }
+            </div>
+            <div class="product-meta">
+              <span class="meta-item">
+                <lucide-icon [img]="Calendar" [size]="16" class="meta-icon"></lucide-icon>
+                {{ formatDate(product.createdAt) }}
+              </span>
+              <span class="meta-item">
+                <lucide-icon [img]="Eye" [size]="16" class="meta-icon"></lucide-icon>
+                {{ product.views }} vues
+              </span>
+            </div>
+          </div>
+
+          <div class="product-description">
+            <p>{{ product.description }}</p>
+          </div>
+
+          <div class="seller-info">
+            <h4 class="seller-title">
+              <lucide-icon [img]="User" [size]="18" class="seller-icon"></lucide-icon>
+              Informations du vendeur
+            </h4>
+            <div class="seller-details">
+              <div class="seller-item">
+                <span class="seller-label">Nom</span>
+                <span class="seller-value"
+                  >{{ product.seller.firstName || 'N/A' }} {{ product.seller.lastName || '' }}</span
+                >
+              </div>
+              <div class="seller-item">
+                <span class="seller-label">Email</span>
+                <a [href]="'mailto:' + (product.seller.email || '')" class="seller-link">
+                  {{ product.seller.email || 'N/A' }}
+                </a>
+              </div>
+              @if (product.seller.phone) {
+              <div class="seller-item">
+                <span class="seller-label">Téléphone</span>
+                <a [href]="'tel:' + product.seller.phone" class="seller-link">
+                  {{ product.seller.phone }}
+                </a>
+              </div>
+              }
+            </div>
+          </div>
+
+          <div class="product-actions">
+            @if (product.status === 'PENDING') {
+            <button class="btn btn-success btn-action" (click)="viewProduct(product)">
+              <lucide-icon [img]="CheckCircle" [size]="18" class="action-icon"></lucide-icon>
+              <span>Approuver</span>
+            </button>
+            <button class="btn btn-danger btn-action" (click)="viewProduct(product)">
+              <lucide-icon [img]="XCircle" [size]="18" class="action-icon"></lucide-icon>
+              <span>Rejeter</span>
+            </button>
+            }
+            <button class="btn btn-secondary btn-action" (click)="viewProduct(product)">
+              <lucide-icon [img]="Eye" [size]="18" class="action-icon"></lucide-icon>
+              <span>Détails</span>
+            </button>
+            <button class="btn btn-danger-outline btn-action" (click)="deleteProduct(product)">
+              <lucide-icon [img]="Trash2" [size]="18" class="action-icon"></lucide-icon>
+              <span>Supprimer</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Modal Product Details -->
+  @if (showModal() && selectedProduct(); as product) {
+  <div
+    class="modal-overlay"
+    (click)="closeModal()"
+    (keydown.escape)="closeModal()"
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+  >
+    <div
+      class="modal-content"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()"
+      role="document"
+    >
+      <div class="modal-header">
+        <h2>{{ product.title }}</h2>
+        <button
+          class="modal-close"
+          (click)="closeModal()"
+          aria-label="Fermer la modal"
+          title="Fermer"
+        >
+          <lucide-icon [img]="X" [size]="24"></lucide-icon>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-images">
+          @for (photo of product.photos; track photo.id) {
+          <img
+            [src]="photo.url"
+            [alt]="'Photo ' + ($index + 1)"
+            class="modal-image"
+            appNoDownload
+            (error)="$any($event.target).src = '/placeholder.svg'"
+          />
+          }
+        </div>
+        <div class="modal-info">
+          <h3>Description</h3>
+          <p>{{ product.description }}</p>
+
+          <h3>Vendeur</h3>
+          <p>
+            <strong>Nom:</strong> {{ selectedProduct()?.seller?.firstName || 'N/A' }}
+            {{ selectedProduct()?.seller?.lastName || '' }}
+          </p>
+          <p>
+            <strong>Email:</strong>
+            <a [href]="'mailto:' + (selectedProduct()?.seller?.email || '')">{{
+              selectedProduct()?.seller?.email || 'N/A'
+            }}</a>
+          </p>
+          @if (selectedProduct()?.seller?.phone) {
+          <p>
+            <strong>Téléphone:</strong>
+            <a [href]="'tel:' + selectedProduct()?.seller?.phone">{{
+              selectedProduct()?.seller?.phone
+            }}</a>
+          </p>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        @if (product.status === 'PENDING') {
+        <button class="btn btn-success" (click)="viewProduct(product)">
+          <lucide-icon [img]="CheckCircle" [size]="18"></lucide-icon>
+          Approuver
+        </button>
+        <button class="btn btn-danger" (click)="viewProduct(product)">
+          <lucide-icon [img]="XCircle" [size]="18"></lucide-icon>
+          Rejeter
+        </button>
+        }
+        <button class="btn btn-danger-outline" (click)="deleteProduct(product)">
+          <lucide-icon [img]="Trash2" [size]="18"></lucide-icon>
+          Supprimer
+        </button>
+        <button class="btn btn-secondary" (click)="closeModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

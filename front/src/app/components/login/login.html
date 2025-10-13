@@ -1,0 +1,114 @@
+<div class="login-page">
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-icon">
+          <lucide-icon [img]="Shield" [size]="32"></lucide-icon>
+        </div>
+        <h1>Connexion Administrateur</h1>
+        <p>Accédez au tableau de bord de modération</p>
+      </div>
+
+      @if (error()) {
+        <div class="alert alert-error">
+          <lucide-icon [img]="AlertCircle" [size]="16" class="alert-icon"></lucide-icon>
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <form (ngSubmit)="onSubmit()" class="login-form">
+        <div class="form-group">
+          <label class="form-label" for="email-input">
+            <lucide-icon [img]="Mail" [size]="16" class="label-icon"></lucide-icon>
+            Adresse email
+          </label>
+          <input
+            id="email-input"
+            type="email"
+            [value]="email()"
+            (input)="email.set($any($event.target).value); validateField('email', $any($event.target).value)"
+            name="email"
+            class="form-input"
+            [class.error]="hasFieldError('email')"
+            placeholder="admin@fotoljay.com"
+            required
+            autocomplete="email"
+            [disabled]="loading()"
+          />
+          @if (hasFieldError('email')) {
+            <div class="field-error">
+              <lucide-icon [img]="AlertCircle" [size]="14"></lucide-icon>
+              {{ getFieldError('email') }}
+            </div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password-input">
+            <lucide-icon [img]="Lock" [size]="16" class="label-icon"></lucide-icon>
+            Mot de passe
+          </label>
+          <div class="password-input-wrapper">
+            <input
+              id="password-input"
+              [type]="showPassword() ? 'text' : 'password'"
+              [value]="password()"
+              (input)="password.set($any($event.target).value); validateField('password', $any($event.target).value)"
+              name="password"
+              class="form-input"
+              [class.error]="hasFieldError('password')"
+              placeholder="••••••••"
+              required
+              autocomplete="current-password"
+              [disabled]="loading()"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePasswordVisibility()"
+              [disabled]="loading()"
+              [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+              [attr.title]="showPassword() ? 'Masquer' : 'Afficher'"
+            >
+              <lucide-icon [img]="showPassword() ? Eye : EyeOff" [size]="18"></lucide-icon>
+            </button>
+          </div>
+          @if (hasFieldError('password')) {
+            <div class="field-error">
+              <lucide-icon [img]="AlertCircle" [size]="14"></lucide-icon>
+              {{ getFieldError('password') }}
+            </div>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-large"
+          [disabled]="loading()"
+        >
+          @if (loading()) {
+            <span class="spinner-small"></span>
+            <span>Connexion en cours...</span>
+          } @else {
+            <span>Se connecter</span>
+            <lucide-icon [img]="ArrowRight" [size]="18"></lucide-icon>
+          }
+        </button>
+      </form>
+
+      <div class="back-button">
+        <a routerLink="/" class="btn">
+          <lucide-icon [img]="ArrowLeft" [size]="16"></lucide-icon>
+          Retour à l'accueil
+        </a>
+      </div>
+
+      <div class="login-footer">
+        <p class="security-note">
+          <lucide-icon [img]="Lock" [size]="14"></lucide-icon>
+          Connexion sécurisée avec chiffrement SSL
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

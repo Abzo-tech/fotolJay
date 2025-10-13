@@ -1,0 +1,122 @@
+<div class="theme-selector-container">
+  <button 
+    class="theme-button" 
+    (click)="toggleDropdown(); $event.stopPropagation()"
+    [class.active]="showDropdown()"
+    aria-label="Changer le thème"
+    title="Changer le thème"
+  >
+    <lucide-icon [img]="Palette" [size]="20"></lucide-icon>
+  </button>
+
+  @if (showDropdown()) {
+    <div class="theme-dropdown" (click)="$event.stopPropagation()">
+      <div class="dropdown-header">
+        <h3>Choisir un thème</h3>
+        <button class="btn-icon" (click)="closeDropdown()" aria-label="Fermer">
+          <lucide-icon [img]="X" [size]="16"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="themes-grid">
+        @for (theme of themes; track theme.id) {
+          <button 
+            class="theme-card"
+            [class.active]="isCurrentTheme(theme.id)"
+            (click)="selectTheme(theme.id)"
+          >
+            <div class="theme-preview">
+              <div class="preview-color" [style.background]="theme.primary"></div>
+              <div class="preview-color" [style.background]="theme.secondary"></div>
+              <div class="preview-color" [style.background]="theme.accent"></div>
+            </div>
+            <span class="theme-name">{{ theme.name }}</span>
+            @if (isCurrentTheme(theme.id)) {
+              <lucide-icon [img]="Check" [size]="16" class="check-icon"></lucide-icon>
+            }
+          </button>
+        }
+      </div>
+
+      <div class="dropdown-divider"></div>
+
+      <button class="custom-toggle-btn" (click)="toggleCustom()">
+        <lucide-icon [img]="Palette" [size]="18"></lucide-icon>
+        <span>Personnaliser les couleurs</span>
+      </button>
+
+      @if (showCustom()) {
+        <div class="custom-colors">
+          <div class="color-picker-group">
+            <label class="color-label">
+              <span>Couleur primaire</span>
+              <input 
+                type="color" 
+                [value]="customPrimary()"
+                (input)="customPrimary.set($any($event.target).value)"
+                class="color-input"
+              />
+            </label>
+            
+            <label class="color-label">
+              <span>Couleur secondaire</span>
+              <input 
+                type="color" 
+                [value]="customSecondary()"
+                (input)="customSecondary.set($any($event.target).value)"
+                class="color-input"
+              />
+            </label>
+            
+            <label class="color-label">
+              <span>Couleur accent</span>
+              <input 
+                type="color" 
+                [value]="customAccent()"
+                (input)="customAccent.set($any($event.target).value)"
+                class="color-input"
+              />
+            </label>
+            
+            <label class="color-label">
+              <span>Fond</span>
+              <input 
+                type="color" 
+                [value]="customBackground()"
+                (input)="customBackground.set($any($event.target).value)"
+                class="color-input"
+              />
+            </label>
+            
+            <label class="color-label">
+              <span>Surface</span>
+              <input 
+                type="color" 
+                [value]="customSurface()"
+                (input)="customSurface.set($any($event.target).value)"
+                class="color-input"
+              />
+            </label>
+            
+            <label class="color-label">
+              <span>Texte</span>
+              <input 
+                type="color" 
+                [value]="customText()"
+                (input)="customText.set($any($event.target).value)"
+                class="color-input"
+              />
+            </label>
+          </div>
+
+          <button class="btn btn-primary apply-btn" (click)="applyCustomTheme()">
+            <lucide-icon [img]="Check" [size]="18"></lucide-icon>
+            Appliquer
+          </button>
+        </div>
+      }
+    </div>
+
+    <div class="dropdown-overlay" (click)="closeDropdown()"></div>
+  }
+</div>

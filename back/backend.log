@@ -1,0 +1,16 @@
+
+> fotoljay-backend@1.0.0 dev
+> nodemon --exec "ts-node --transpile-only --files --project tsconfig.json src/server.ts" --ext ts,js,json
+
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: ts,js,json[39m
+[32m[nodemon] starting `ts-node --transpile-only --files --project tsconfig.json src/server.ts`[39m
+✅ Email service initialized
+Server starting...
+After dotenv config
+Before app setup
+API routes configured
+Cron jobs initialized
+Server is running on port 3000

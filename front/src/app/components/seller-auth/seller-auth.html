@@ -1,0 +1,174 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">
+        @if (isLogin()) {
+          <lucide-icon [img]="LogIn" [size]="32"></lucide-icon>
+          <span>Connexion Vendeur</span>
+        } @else {
+          <lucide-icon [img]="UserPlus" [size]="32"></lucide-icon>
+          <span>Inscription Vendeur</span>
+        }
+      </h1>
+      <p class="auth-subtitle">
+        @if (isLogin()) {
+          Connectez-vous pour gérer vos produits
+        } @else {
+          Créez un compte pour vendre vos produits
+        }
+      </p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="auth-form">
+      @if (errorMessage()) {
+        <div class="error-message">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      @if (!isLogin()) {
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">
+              <lucide-icon [img]="User" [size]="18"></lucide-icon>
+              Prénom *
+            </label>
+            <input
+              type="text"
+              id="firstName"
+              [ngModel]="firstName()"
+              (ngModelChange)="firstName.set($event)"
+              name="firstName"
+              required
+              [disabled]="loading()"
+              placeholder="Votre prénom"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">
+              <lucide-icon [img]="User" [size]="18"></lucide-icon>
+              Nom *
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              [ngModel]="lastName()"
+              (ngModelChange)="lastName.set($event)"
+              name="lastName"
+              required
+              [disabled]="loading()"
+              placeholder="Votre nom"
+            />
+          </div>
+        </div>
+      }
+
+      <div class="form-group">
+        <label for="email">
+          <lucide-icon [img]="Mail" [size]="18"></lucide-icon>
+          Email *
+        </label>
+        <input
+          type="email"
+          id="email"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+          name="email"
+          required
+          [disabled]="loading()"
+          placeholder="votre@email.com"
+        />
+      </div>
+
+      @if (!isLogin()) {
+        <div class="form-group">
+          <label for="phone">
+            <lucide-icon [img]="Phone" [size]="18"></lucide-icon>
+            Téléphone
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            [ngModel]="phone()"
+            (ngModelChange)="phone.set($event)"
+            name="phone"
+            [disabled]="loading()"
+            placeholder="+33 6 12 34 56 78"
+          />
+        </div>
+      }
+
+      <div class="form-group">
+        <label for="password">
+          <lucide-icon [img]="Lock" [size]="18"></lucide-icon>
+          Mot de passe *
+        </label>
+        <div class="password-input">
+          <input
+            [type]="showPassword() ? 'text' : 'password'"
+            id="password"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            name="password"
+            required
+            [disabled]="loading()"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+            [disabled]="loading()"
+            [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+          >
+            <lucide-icon [img]="showPassword() ? Eye : EyeOff" [size]="20"></lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary btn-full"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <span class="spinner"></span>
+          Chargement...
+        } @else {
+          @if (isLogin()) {
+            Se connecter
+          } @else {
+            S'inscrire
+          }
+        }
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      @if (isLogin()) {
+        <p>
+          Pas encore de compte ?
+          <button type="button" class="link-button" (click)="toggleMode()">
+            Créer un compte
+          </button>
+        </p>
+      } @else {
+        <p>
+          Déjà un compte ?
+          <button type="button" class="link-button" (click)="toggleMode()">
+            Se connecter
+          </button>
+        </p>
+      }
+
+      <div class="divider">
+        <span>ou</span>
+      </div>
+
+      <a routerLink="/" class="btn btn-secondary btn-full">
+        Retour à l'accueil
+      </a>
+    </div>
+  </div>
+</div>

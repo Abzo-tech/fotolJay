@@ -1,0 +1,448 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <a class="navbar-brand" href="/">
+      <img src="/assets/images/logo.png" alt="Fotoljay Logo" class="brand-logo" />
+      <span class="brand-name">Fotoljay</span>
+    </a>
+  </div>
+
+  <div class="navbar-right">
+    <a routerLink="/" class="navbar-link">Accueil</a>
+    @if (isAuthenticated()) {
+      <div class="user-info">
+        <lucide-icon [img]="User" [size]="18"></lucide-icon>
+        <span>{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="logout()">
+        Déconnexion
+      </button>
+    } @else {
+      <a routerLink="/seller-auth" class="btn btn-primary">
+        <lucide-icon [img]="LogIn" [size]="18"></lucide-icon>
+        Se connecter
+      </a>
+    }
+  </div>
+
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-button" (click)="toggleMobileMenu()" aria-label="Menu">
+    <lucide-icon [img]="Menu" [size]="24"></lucide-icon>
+  </button>
+
+  <!-- Mobile Menu Overlay -->
+  @if (mobileMenuOpen()) {
+    <div class="mobile-menu-overlay" (click)="closeMobileMenu()">
+      <div class="mobile-menu" (click)="$event.stopPropagation()">
+        <div class="mobile-menu-header">
+          <span class="mobile-menu-title">Menu</span>
+          <button class="mobile-menu-close" (click)="closeMobileMenu()" aria-label="Fermer">
+            <lucide-icon [img]="X" [size]="24"></lucide-icon>
+          </button>
+        </div>
+        <div class="mobile-menu-content">
+          <a routerLink="/" class="mobile-menu-item" (click)="closeMobileMenu()">
+            <lucide-icon [img]="Home" [size]="20"></lucide-icon>
+            <span>Accueil</span>
+          </a>
+          @if (isAuthenticated()) {
+            <div class="mobile-menu-item">
+              <lucide-icon [img]="User" [size]="20"></lucide-icon>
+              <span>{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
+            </div>
+            <button class="mobile-menu-item" (click)="logout(); closeMobileMenu()">
+              <lucide-icon [img]="LogOut" [size]="20"></lucide-icon>
+              <span>Déconnexion</span>
+            </button>
+          } @else {
+            <a routerLink="/seller-auth" class="mobile-menu-item" (click)="closeMobileMenu()">
+              <lucide-icon [img]="LogIn" [size]="20"></lucide-icon>
+              <span>Se connecter</span>
+            </a>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</nav>
+
+<div class="container">
+  @if (isAuthenticated()) {
+    <!-- Navigation du vendeur -->
+    <div class="seller-nav">
+      <button
+        class="seller-nav-btn"
+        [class.active]="currentView() === 'sell'"
+        (click)="setView('sell')"
+      >
+        <lucide-icon [img]="Camera" [size]="20"></lucide-icon>
+        Vendre un produit
+      </button>
+      <button
+        class="seller-nav-btn"
+        [class.active]="currentView() === 'dashboard'"
+        (click)="setView('dashboard')"
+      >
+        <lucide-icon [img]="LayoutDashboard" [size]="20"></lucide-icon>
+        Mes produits
+      </button>
+      <button
+        class="seller-nav-btn"
+        [class.active]="currentView() === 'profile'"
+        (click)="setView('profile')"
+      >
+        <lucide-icon [img]="User" [size]="20"></lucide-icon>
+        Profil vendeur
+      </button>
+    </div>
+
+    <!-- Contenu selon la vue active -->
+    @if (currentView() === 'sell') {
+      <div class="card sell-card">
+        <div class="card-header-section">
+          <h1 class="card-header">
+            <lucide-icon [img]="Camera" [size]="28"></lucide-icon>
+            Vendre un produit
+          </h1>
+        </div>
+
+        <div class="user-welcome">
+          <lucide-icon [img]="User" [size]="24"></lucide-icon>
+          <div>
+            <p class="welcome-text">Bonjour, <strong>{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</strong></p>
+            <p class="welcome-subtext">{{ currentUser()?.email }}</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <p class="info-text">
+            <lucide-icon [img]="AlertCircle" [size]="20" class="icon-inline"></lucide-icon>
+            <strong>Important:</strong> Prenez des photos claires de votre produit directement avec votre appareil photo.
+            <strong>Les uploads depuis la galerie sont bloqués pour garantir l'authenticité.</strong>
+          </p>
+        </div>
+
+        <form (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label class="form-label">
+              <lucide-icon [img]="Camera" [size]="20"></lucide-icon>
+              Photos du produit * ({{photos().length}}/{{maxPhotos}})
+            </label>
+
+            <button
+              type="button"
+              class="btn btn-primary camera-btn"
+              (click)="openCamera()"
+              [disabled]="photos().length >= maxPhotos"
+            >
+              <lucide-icon [img]="Camera" [size]="20"></lucide-icon>
+              @if (photos().length === 0) {
+                Prendre une photo
+              } @else {
+                Ajouter une autre photo
+              }
+            </button>
+
+            <small class="form-hint">
+              ⚠️ Prenez entre 1 et 5 photos directement avec votre appareil. Les uploads de galerie sont bloqués.
+            </small>
+
+            @if (photoPreviewUrls().length > 0) {
+              <div class="photo-preview-grid">
+                @for (url of photoPreviewUrls(); track $index) {
+                  <div class="photo-preview-item">
+                    <img [src]="url" alt="Photo" class="photo-preview-image" (error)="$any($event.target).src='/placeholder.svg'" />
+                    <button
+                      type="button"
+                      (click)="removePhoto($index)"
+                      class="photo-remove-btn"
+                      aria-label="Supprimer la photo"
+                      title="Supprimer"
+                    >
+                      <lucide-icon [img]="X" [size]="16"></lucide-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="title-input">Titre du produit *</label>
+            <input
+              id="title-input"
+              type="text"
+              [value]="title()"
+              (input)="title.set($any($event.target).value)"
+              name="title"
+              class="form-input"
+              placeholder="Ex: iPhone 12 Pro 128GB"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="description-input">Description *</label>
+            <textarea
+              id="description-input"
+              [value]="description()"
+              (input)="description.set($any($event.target).value)"
+              name="description"
+              class="form-textarea"
+              placeholder="Décrivez votre produit en détail..."
+              required
+              maxlength="1000"
+            ></textarea>
+          </div>
+
+          <div class="info-box">
+            <p class="info-text info-text-small">
+              <lucide-icon [img]="AlertCircle" [size]="18" class="icon-inline"></lucide-icon>
+              Votre produit sera examiné par notre équipe avant publication.
+              Vous recevrez un email de confirmation.
+            </p>
+          </div>
+
+          <div class="submit-actions">
+            <button
+              type="submit"
+              class="btn btn-primary submit-btn"
+              [disabled]="submitting()"
+            >
+              @if (submitting()) {
+                Publication en cours...
+              } @else {
+                <lucide-icon [img]="CheckCircle" [size]="20" class="icon-inline"></lucide-icon>
+                Publier le produit
+              }
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="resetForm()">
+              Réinitialiser
+            </button>
+          </div>
+        </form>
+      </div>
+    } @else if (currentView() === 'dashboard') {
+      <!-- Dashboard des produits du vendeur -->
+      <div class="seller-dashboard">
+        <div class="dashboard-header">
+          <h2 class="dashboard-title">
+            <lucide-icon [img]="LayoutDashboard" [size]="24"></lucide-icon>
+            Mes produits
+          </h2>
+          <p class="dashboard-subtitle">Gérez vos produits publiés</p>
+        </div>
+
+        @if (sellerProducts().length === 0) {
+          <div class="empty-state">
+            <lucide-icon [img]="Package" [size]="48"></lucide-icon>
+            <h3>Aucun produit publié</h3>
+            <p>Vous n'avez pas encore publié de produit.</p>
+            <button class="btn btn-primary" (click)="setView('sell')">
+              <lucide-icon [img]="Plus" [size]="18"></lucide-icon>
+              Publier mon premier produit
+            </button>
+          </div>
+        } @else {
+          <div class="products-grid">
+            @for (product of sellerProducts(); track product.id) {
+              <div class="product-card">
+                <div class="product-image">
+                  @if (product.photos && product.photos.length > 0) {
+                    <img [src]="'/api/uploads/' + product.photos[0].url" [alt]="product.title" />
+                  } @else {
+                    <div class="no-image">
+                      <lucide-icon [img]="Image" [size]="32"></lucide-icon>
+                    </div>
+                  }
+                </div>
+                <div class="product-info">
+                  <h3 class="product-title">{{ product.title }}</h3>
+                  <p class="product-status" [class]="'status-' + product.status">
+                    {{ getStatusLabel(product.status) }}
+                  </p>
+                  <div class="product-meta">
+                    <span class="meta-item">
+                      <lucide-icon [img]="Calendar" [size]="14"></lucide-icon>
+                      {{ formatDate(product.createdAt) }}
+                    </span>
+                    <span class="meta-item">
+                      <lucide-icon [img]="Eye" [size]="14"></lucide-icon>
+                      {{ product.views || 0 }} vues
+                    </span>
+                  </div>
+                </div>
+                <div class="product-actions">
+                  <button class="btn btn-outline" (click)="editProduct(product)">
+                    <lucide-icon [img]="Edit" [size]="16"></lucide-icon>
+                    Modifier
+                  </button>
+                  <button class="btn btn-outline btn-danger" (click)="deleteProduct(product)">
+                    <lucide-icon [img]="Trash2" [size]="16"></lucide-icon>
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    } @else if (currentView() === 'profile') {
+      <!-- Profil vendeur -->
+      <div class="seller-profile">
+        <div class="profile-header">
+          <h2 class="profile-title">
+            <lucide-icon [img]="User" [size]="24"></lucide-icon>
+            Profil vendeur
+          </h2>
+          <p class="profile-subtitle">Gérez vos informations de contact</p>
+        </div>
+
+        <div class="profile-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="seller-firstname-input">Prénom *</label>
+              <input
+                id="seller-firstname-input"
+                type="text"
+                [value]="sellerFirstName()"
+                (input)="sellerFirstName.set($any($event.target).value)"
+                name="sellerFirstName"
+                class="form-input"
+                placeholder="Votre prénom"
+                required
+                maxlength="50"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="seller-lastname-input">Nom *</label>
+              <input
+                id="seller-lastname-input"
+                type="text"
+                [value]="sellerLastName()"
+                (input)="sellerLastName.set($any($event.target).value)"
+                name="sellerLastName"
+                class="form-input"
+                placeholder="Votre nom"
+                required
+                maxlength="50"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="seller-email-input">Email *</label>
+              <input
+                id="seller-email-input"
+                type="email"
+                [value]="sellerEmail()"
+                (input)="sellerEmail.set($any($event.target).value)"
+                name="sellerEmail"
+                class="form-input"
+                placeholder="votre.email@exemple.com"
+                required
+                maxlength="255"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="seller-phone-input">Téléphone</label>
+              <input
+                id="seller-phone-input"
+                type="tel"
+                [value]="sellerPhone()"
+                (input)="sellerPhone.set($any($event.target).value)"
+                name="sellerPhone"
+                class="form-input"
+                placeholder="+33 6 12 34 56 78"
+                maxlength="20"
+              />
+              <small class="form-hint">Optionnel - pour être contacté directement</small>
+            </div>
+          </div>
+          <div class="form-hint">Ce numéro sera affiché avec vos produits</div>
+
+          <div class="profile-stats">
+            <div class="stat-item">
+              <span class="stat-label">Produits actifs</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Total vues</span>
+              <span class="stat-value">{{ getTotalViews() }}</span>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <button class="btn btn-primary" (click)="updateProfile()">
+              <lucide-icon [img]="Save" [size]="18"></lucide-icon>
+              Sauvegarder les modifications
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="card sell-card">
+      <div class="auth-required">
+        <lucide-icon [img]="LogIn" [size]="48"></lucide-icon>
+        <h2>Authentification requise</h2>
+        <p>Vous devez être connecté pour accéder à votre espace vendeur.</p>
+        <a routerLink="/seller-auth" class="btn btn-primary">
+          <lucide-icon [img]="LogIn" [size]="18"></lucide-icon>
+          Se connecter / S'inscrire
+        </a>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Modal Caméra -->
+@if (showCamera()) {
+  <div class="camera-modal-overlay" (click)="closeCamera()">
+    <div class="camera-modal" (click)="$event.stopPropagation()">
+      <div class="camera-header">
+        <h3>
+          <lucide-icon [img]="Camera" [size]="24"></lucide-icon>
+          Prendre une photo
+        </h3>
+        <button 
+          type="button" 
+          class="camera-close-btn" 
+          (click)="closeCamera()"
+          aria-label="Fermer la caméra"
+        >
+          <lucide-icon [img]="X" [size]="24"></lucide-icon>
+        </button>
+      </div>
+      
+      <div class="camera-viewport">
+        <video 
+          #videoElement
+          autoplay 
+          playsinline
+          class="camera-video"
+        ></video>
+        <canvas #canvasElement class="hidden-canvas"></canvas>
+      </div>
+      
+      <div class="camera-controls">
+        <button 
+          type="button" 
+          class="btn btn-primary btn-capture"
+          (click)="capturePhoto()"
+        >
+          <lucide-icon [img]="Camera" [size]="32"></lucide-icon>
+          <span>Capturer</span>
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-secondary"
+          (click)="closeCamera()"
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+}
