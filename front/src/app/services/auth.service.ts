@@ -25,7 +25,7 @@ export class AuthService {
 
   private checkAuth(): void {
     if (!this.isBrowser) return;
-    
+
     const token = localStorage.getItem('token');
     if (token) {
       this.apiService.getCurrentUser().subscribe({

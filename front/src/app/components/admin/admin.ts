@@ -3,8 +3,24 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 import { Product } from '../../models/product.model';
-import { LucideAngularModule, Camera, User, Eye, Home, LogOut, RefreshCw, CheckCircle, XCircle, Trash2, Clock, Calendar, Shield, X } from 'lucide-angular';
+import {
+  LucideAngularModule,
+  Camera,
+  User,
+  Eye,
+  Home,
+  LogOut,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  Trash2,
+  Clock,
+  Calendar,
+  Shield,
+  X,
+} from 'lucide-angular';
 import { NoDownloadDirective } from '../../directives/no-download.directive';
 import { NotificationService } from '../../services/notification.service';
 import { NotificationBellComponent } from '../notification-bell/notification-bell';
@@ -12,9 +28,16 @@ import { ThemeSelectorComponent } from '../theme-selector/theme-selector';
 
 @Component({
   selector: 'app-admin',
-  imports: [CommonModule, RouterLink, LucideAngularModule, NoDownloadDirective, NotificationBellComponent, ThemeSelectorComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    LucideAngularModule,
+    NoDownloadDirective,
+    NotificationBellComponent,
+    ThemeSelectorComponent,
+  ],
   templateUrl: './admin.html',
-  styleUrl: './admin.css'
+  styleUrl: './admin.css',
 })
 export class AdminComponent implements OnInit {
   readonly Camera = Camera;
@@ -35,6 +58,7 @@ export class AdminComponent implements OnInit {
   public authService = inject(AuthService);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
+  private toastService = inject(ToastService);
 
   loading = signal<boolean>(false);
   products = signal<Product[]>([]);
@@ -43,7 +67,7 @@ export class AdminComponent implements OnInit {
   currentView = signal<'pending' | 'approved'>('pending');
 
   ngOnInit(): void {
-    if (!this.authService.isAuthenticated()) {
+    if (!this.authService.isAuthenticated() || !this.authService.isAdmin()) {
       this.router.navigate(['/login']);
       return;
     }
@@ -65,7 +89,7 @@ export class AdminComponent implements OnInit {
         if (error.status === 401) {
           this.authService.logout();
         }
-      }
+      },
     });
   }
 
@@ -84,7 +108,7 @@ export class AdminComponent implements OnInit {
         if (error.status === 401) {
           this.authService.logout();
         }
-      }
+      },
     });
   }
 
@@ -106,15 +130,60 @@ export class AdminComponent implements OnInit {
     this.selectedProduct.set(null);
   }
 
-  deleteProduct(product: any): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer le produit "${product.title}" ?`)) {
-      // Temporairement désactivé jusqu'à implémentation complète
-      console.log('Suppression du produit:', product.id);
-    }
+  approveProduct(product: Product): void {
+    this.toastService.info('Approbation du produit en cours...');
+    this.loading.set(true);
+    this.apiService.approveProduct(product.id).subscribe({
+      next: () => {
+        this.toastService.success('Produit approuvé avec succès');
+        this.products.set(this.products().filter((p) => p.id !== product.id));
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Erreur approbation produit :', err);
+        this.toastService.error("Erreur lors de l'approbation du produit");
+        this.loading.set(false);
+      },
+    });
+  }
+
+  rejectProduct(product: Product): void {
+    this.toastService.info('Rejet du produit en cours...');
+    this.loading.set(true);
+    const reason = 'Rejeté par l\'administrateur';
+    this.apiService.rejectProduct(product.id, reason).subscribe({
+      next: () => {
+        this.toastService.success('Produit rejeté avec succès');
+        this.products.set(this.products().filter((p) => p.id !== product.id));
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Erreur rejet produit :', err);
+        this.toastService.error('Erreur lors du rejet du produit');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  deleteProduct(product: Product): void {
+    this.toastService.warning('Suppression du produit en cours...');
+    this.loading.set(true);
+    this.apiService.deleteProduct(product.id).subscribe({
+      next: () => {
+        this.toastService.success('Produit supprimé avec succès');
+        this.products.set(this.products().filter((p) => p.id !== product.id));
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Erreur suppression produit :', err);
+        this.toastService.error('Erreur lors de la suppression du produit');
+        this.loading.set(false);
+      },
+    });
   }
 
   getPrimaryPhoto(product: Product): string {
-    const primary = product.photos.find(p => p.isPrimary);
+    const primary = product.photos.find((p) => p.isPrimary);
     return primary?.url || product.photos[0]?.url || '/placeholder.svg';
   }
 
@@ -124,7 +193,7 @@ export class AdminComponent implements OnInit {
       month: 'long',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
@@ -133,10 +202,10 @@ export class AdminComponent implements OnInit {
   }
 
   getPendingCount(): number {
-    return this.products().filter(p => p.status === 'PENDING').length;
+    return this.products().filter((p) => p.status === 'PENDING').length;
   }
 
   getApprovedCount(): number {
-    return this.products().filter(p => p.status === 'APPROVED').length;
+    return this.products().filter((p) => p.status === 'APPROVED').length;
   }
 }

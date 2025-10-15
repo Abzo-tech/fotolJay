@@ -6,7 +6,7 @@ import { map } from 'rxjs/operators';
 import { Product, PaginatedResponse, LoginResponse, User } from '../models/product.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ApiService {
   private apiUrl = 'http://localhost:3000/api';
@@ -17,10 +17,9 @@ export class ApiService {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
+  /** ===================== 🔐 GESTION DES HEADERS ===================== */
   private getHeaders(includeAuth = false): HttpHeaders {
-    let headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
+    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
     if (includeAuth && this.isBrowser) {
       const token = localStorage.getItem('token');
@@ -32,8 +31,7 @@ export class ApiService {
     return headers;
   }
 
-  // ==================== PRODUITS (PUBLIC) ====================
-
+  /** ===================== 🛍️ PRODUITS PUBLICS ===================== */
   getProducts(filters?: {
     status?: string;
     search?: string;
@@ -66,8 +64,7 @@ export class ApiService {
     return this.http.post<Product>(`${this.apiUrl}/products`, formData, { headers });
   }
 
-  // ==================== AUTHENTIFICATION ====================
-
+  /** ===================== 👤 AUTHENTIFICATION ===================== */
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(
       `${this.apiUrl}/auth/login`,
@@ -75,8 +72,6 @@ export class ApiService {
       { headers: this.getHeaders() }
     );
   }
-
-  // ==================== AUTHENTIFICATION VENDEUR ====================
 
   sellerLogin(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(
@@ -87,15 +82,14 @@ export class ApiService {
   }
 
   getCurrentUser(): Observable<User> {
-    return this.http.get<{ user: User }>(`${this.apiUrl}/auth/me`, {
-      headers: this.getHeaders(true)
-    }).pipe(
-      map(response => response.user)
-    );
+    return this.http
+      .get<{ user: User }>(`${this.apiUrl}/auth/me`, {
+        headers: this.getHeaders(true),
+      })
+      .pipe(map((response) => response.user));
   }
 
-  // ==================== MODÉRATION (ADMIN/MODERATOR) ====================
-
+  /** ===================== 🧑‍⚖️ MODÉRATION (ADMIN) ===================== */
   getPendingProducts(page = 1, limit = 20): Observable<PaginatedResponse<Product>> {
     return this.http.get<PaginatedResponse<Product>>(
       `${this.apiUrl}/products/moderation/pending?page=${page}&limit=${limit}`,
@@ -119,23 +113,32 @@ export class ApiService {
     );
   }
 
-  // ==================== PRODUITS VENDEUR ====================
-
+  /** ===================== 🧵 PRODUITS DU VENDEUR ===================== */
   getSellerProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(`${this.apiUrl}/products/seller`, {
-      headers: this.getHeaders(true)
+    return this.http
+      .get<{
+        products: Product[];
+        pagination: { total: number; page: number; limit: number; totalPages: number };
+      }>(`${this.apiUrl}/products/seller`, {
+        headers: this.getHeaders(true),
+      })
+      .pipe(map((response) => response.products));
+  }
+
+  deleteProduct(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/products/${id}`, {
+      headers: this.getHeaders(true),
     });
   }
 
+  /** ===================== ⚙️ MÉTHODES GÉNÉRIQUES ===================== */
   post<T>(endpoint: string, body: any, includeAuth = false): Observable<T> {
     return this.http.post<T>(`${this.apiUrl}${endpoint}`, body, {
-      headers: this.getHeaders(includeAuth)
+      headers: this.getHeaders(includeAuth),
     });
   }
 
   get<T>(endpoint: string, includeAuth = false): Observable<T> {
-    return this.http.get<T>(`${this.apiUrl}${endpoint}`, {
-      headers: this.getHeaders(includeAuth)
-    });
+    return this.http.get<T>(`${this.apiUrl}${endpoint}`, { headers: this.getHeaders(includeAuth) });
   }
 }

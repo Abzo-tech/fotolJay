@@ -38,6 +38,15 @@ const upload = multer({
 
 // Routes publiques (pas d'authentification requise)
 router.get('/', productController.getProducts.bind(productController));
+
+// Récupérer les produits du vendeur actuellement connecté
+router.get(
+  '/seller',
+  authenticateToken,
+  productController.getCurrentSellerProducts.bind(productController)
+);
+
+// Routes publiques (pas d'authentification requise)
 router.get('/:id', productController.getProductById.bind(productController));
 
 // Publier un produit (authentification requise)
@@ -46,13 +55,6 @@ router.post(
   authenticateToken,
   upload.array('photos', 5), // Maximum 5 photos
   productController.createProduct.bind(productController)
-);
-
-// Récupérer les produits du vendeur actuellement connecté
-router.get(
-  '/seller',
-  authenticateToken,
-  productController.getCurrentSellerProducts.bind(productController)
 );
 
 // Routes de modération (MODERATOR ou ADMIN)

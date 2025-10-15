@@ -73,13 +73,16 @@ class ProductController {
             res.status(500).json({ error: error.message || 'Internal server error' });
         }
     }
-    // Récupérer les produits d'un vendeur par email
-    async getSellerProducts(req, res) {
+    // Récupérer les produits du vendeur actuellement connecté
+    async getCurrentSellerProducts(req, res) {
         try {
-            const { email } = req.params;
+            const userId = req.user?.id;
+            if (!userId) {
+                return res.status(401).json({ error: 'Authentication required' });
+            }
             const { status, search, page, limit } = req.query;
             const filters = {
-                sellerEmail: email,
+                sellerId: userId,
                 status: status,
                 search: search,
                 page: page ? parseInt(page) : undefined,
@@ -89,7 +92,7 @@ class ProductController {
             res.json(result);
         }
         catch (error) {
-            console.error('Error fetching seller products:', error);
+            console.error('Error fetching current seller products:', error);
             res.status(500).json({ error: error.message || 'Internal server error' });
         }
     }

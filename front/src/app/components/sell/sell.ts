@@ -85,7 +85,7 @@ export class SellComponent implements OnInit, OnDestroy {
   readonly Image = Image;
 
   isAuthenticated = signal<boolean>(false);
-  currentUser = signal<any>(null);
+  currentUser = signal<{ firstName: string; lastName: string; email: string } | null>(null);
 
   photos = signal<File[]>([]);
   photoPreviewUrls = signal<string[]>([]);
@@ -172,7 +172,7 @@ export class SellComponent implements OnInit, OnDestroy {
   }
 
   getStatusLabel(status: string): string {
-    const statusMap: { [key: string]: string } = {
+    const statusMap: Record<string, string> = {
       pending: 'En attente',
       approved: 'Approuvé',
       rejected: 'Rejeté'
@@ -212,7 +212,7 @@ export class SellComponent implements OnInit, OnDestroy {
 
   editProduct(product: Product): void {
     // Ici on pourrait implémenter l'édition d'un produit
-    this.toastService.info('Fonctionnalité d\'édition à venir');
+    this.toastService.info(`Fonctionnalité d'édition à venir pour le produit: ${product.title}`);
   }
 
   deleteProduct(product: Product): void {
@@ -306,7 +306,10 @@ export class SellComponent implements OnInit, OnDestroy {
     this.photoPreviewUrls.set(urls);
   }
 
-  onSubmit(): void {
+  onSubmit(event: SubmitEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
     const validationResult = productSchema.safeParse({
       title: this.title(),
       description: this.description(),

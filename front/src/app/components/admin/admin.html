@@ -213,11 +213,11 @@
 
           <div class="product-actions">
             @if (product.status === 'PENDING') {
-            <button class="btn btn-success btn-action" (click)="viewProduct(product)">
+            <button class="btn btn-success btn-action" (click)="approveProduct(product)">
               <lucide-icon [img]="CheckCircle" [size]="18" class="action-icon"></lucide-icon>
               <span>Approuver</span>
             </button>
-            <button class="btn btn-danger btn-action" (click)="viewProduct(product)">
+            <button class="btn btn-danger btn-action" (click)="rejectProduct(product)">
               <lucide-icon [img]="XCircle" [size]="18" class="action-icon"></lucide-icon>
               <span>Rejeter</span>
             </button>
@@ -304,11 +304,11 @@
       </div>
       <div class="modal-footer">
         @if (product.status === 'PENDING') {
-        <button class="btn btn-success" (click)="viewProduct(product)">
+        <button class="btn btn-success" (click)="approveProduct(product)">
           <lucide-icon [img]="CheckCircle" [size]="18"></lucide-icon>
           Approuver
         </button>
-        <button class="btn btn-danger" (click)="viewProduct(product)">
+        <button class="btn btn-danger" (click)="rejectProduct(product)">
           <lucide-icon [img]="XCircle" [size]="18"></lucide-icon>
           Rejeter
         </button>

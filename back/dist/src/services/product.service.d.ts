@@ -39,7 +39,7 @@ export declare class ProductService {
     }>;
     getProducts(filters?: {
         status?: ProductStatus;
-        sellerEmail?: string;
+        sellerId?: string;
         search?: string;
         page?: number;
         limit?: number;

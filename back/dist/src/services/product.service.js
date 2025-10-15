@@ -63,8 +63,8 @@ class ProductService {
         if (filters?.status) {
             where.status = filters.status;
         }
-        if (filters?.sellerEmail) {
-            where.sellerEmail = filters.sellerEmail;
+        if (filters?.sellerId) {
+            where.sellerId = filters.sellerId;
         }
         if (filters?.search) {
             where.OR = [

@@ -1,4 +1,4 @@
-<nav class="navbar">
+ <nav class="navbar">
   <div class="navbar-left">
     <a class="navbar-brand" href="/">
       <img src="/assets/images/logo.png" alt="Fotoljay Logo" class="brand-logo" />
@@ -13,11 +13,11 @@
         <lucide-icon [img]="User" [size]="18"></lucide-icon>
         <span>{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
       </div>
-      <button type="button" class="btn btn-secondary" (click)="logout()">
+      <button type="button" class="btn btn-secondary" (click)="logout()" (keydown.enter)="logout()" (keydown.space)="logout()" tabindex="0">
         Déconnexion
       </button>
     } @else {
-      <a routerLink="/seller-auth" class="btn btn-primary">
+      <a routerLink="/seller-auth" class="btn btn-primary" tabindex="0">
         <lucide-icon [img]="LogIn" [size]="18"></lucide-icon>
         Se connecter
       </a>
@@ -25,22 +25,22 @@
   </div>
 
   <!-- Mobile Menu Button -->
-  <button class="mobile-menu-button" (click)="toggleMobileMenu()" aria-label="Menu">
+  <button class="mobile-menu-button" (click)="toggleMobileMenu()" (keydown.enter)="toggleMobileMenu()" (keydown.space)="toggleMobileMenu()" aria-label="Menu" tabindex="0" aria-expanded="false" [attr.aria-expanded]="mobileMenuOpen()">
     <lucide-icon [img]="Menu" [size]="24"></lucide-icon>
   </button>
 
   <!-- Mobile Menu Overlay -->
   @if (mobileMenuOpen()) {
-    <div class="mobile-menu-overlay" (click)="closeMobileMenu()">
-      <div class="mobile-menu" (click)="$event.stopPropagation()">
+    <div class="mobile-menu-overlay" (click)="closeMobileMenu()" (keydown.enter)="closeMobileMenu()" (keydown.space)="closeMobileMenu()" (keyup.enter)="closeMobileMenu()" (keyup.space)="closeMobileMenu()" tabindex="0" role="dialog" aria-label="Menu mobile" aria-modal="true" aria-labelledby="mobile-menu-title">
+      <div class="mobile-menu" (click)="$event.stopPropagation()" role="document">
         <div class="mobile-menu-header">
-          <span class="mobile-menu-title">Menu</span>
-          <button class="mobile-menu-close" (click)="closeMobileMenu()" aria-label="Fermer">
+          <span id="mobile-menu-title" class="mobile-menu-title">Menu</span>
+          <button class="mobile-menu-close" (click)="closeMobileMenu()" (keydown.enter)="closeMobileMenu()" (keydown.space)="closeMobileMenu()" aria-label="Fermer" tabindex="0">
             <lucide-icon [img]="X" [size]="24"></lucide-icon>
           </button>
         </div>
         <div class="mobile-menu-content">
-          <a routerLink="/" class="mobile-menu-item" (click)="closeMobileMenu()">
+          <a routerLink="/" class="mobile-menu-item" (click)="closeMobileMenu()" (keydown.enter)="closeMobileMenu()" (keydown.space)="closeMobileMenu()" tabindex="0">
             <lucide-icon [img]="Home" [size]="20"></lucide-icon>
             <span>Accueil</span>
           </a>
@@ -49,12 +49,12 @@
               <lucide-icon [img]="User" [size]="20"></lucide-icon>
               <span>{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
             </div>
-            <button class="mobile-menu-item" (click)="logout(); closeMobileMenu()">
+            <button class="mobile-menu-item" (click)="logout(); closeMobileMenu()" (keydown.enter)="logout(); closeMobileMenu()" (keydown.space)="logout(); closeMobileMenu()" tabindex="0">
               <lucide-icon [img]="LogOut" [size]="20"></lucide-icon>
               <span>Déconnexion</span>
             </button>
           } @else {
-            <a routerLink="/seller-auth" class="mobile-menu-item" (click)="closeMobileMenu()">
+            <a routerLink="/seller-auth" class="mobile-menu-item" (click)="closeMobileMenu()" (keydown.enter)="closeMobileMenu()" (keydown.space)="closeMobileMenu()" tabindex="0">
               <lucide-icon [img]="LogIn" [size]="20"></lucide-icon>
               <span>Se connecter</span>
             </a>
@@ -73,6 +73,9 @@
         class="seller-nav-btn"
         [class.active]="currentView() === 'sell'"
         (click)="setView('sell')"
+        (keydown.enter)="setView('sell')"
+        (keydown.space)="setView('sell')"
+        tabindex="0"
       >
         <lucide-icon [img]="Camera" [size]="20"></lucide-icon>
         Vendre un produit
@@ -81,6 +84,9 @@
         class="seller-nav-btn"
         [class.active]="currentView() === 'dashboard'"
         (click)="setView('dashboard')"
+        (keydown.enter)="setView('dashboard')"
+        (keydown.space)="setView('dashboard')"
+        tabindex="0"
       >
         <lucide-icon [img]="LayoutDashboard" [size]="20"></lucide-icon>
         Mes produits
@@ -89,6 +95,9 @@
         class="seller-nav-btn"
         [class.active]="currentView() === 'profile'"
         (click)="setView('profile')"
+        (keydown.enter)="setView('profile')"
+        (keydown.space)="setView('profile')"
+        tabindex="0"
       >
         <lucide-icon [img]="User" [size]="20"></lucide-icon>
         Profil vendeur
@@ -121,18 +130,21 @@
           </p>
         </div>
 
-        <form (ngSubmit)="onSubmit()">
+        <form (ngSubmit)="onSubmit($event)">
           <div class="form-group">
-            <label class="form-label">
+            <div class="form-label">
               <lucide-icon [img]="Camera" [size]="20"></lucide-icon>
               Photos du produit * ({{photos().length}}/{{maxPhotos}})
-            </label>
+            </div>
 
             <button
               type="button"
               class="btn btn-primary camera-btn"
               (click)="openCamera()"
+              (keydown.enter)="openCamera()"
+              (keydown.space)="openCamera()"
               [disabled]="photos().length >= maxPhotos"
+              tabindex="0"
             >
               <lucide-icon [img]="Camera" [size]="20"></lucide-icon>
               @if (photos().length === 0) {
@@ -154,9 +166,12 @@
                     <button
                       type="button"
                       (click)="removePhoto($index)"
+                      (keydown.enter)="removePhoto($index)"
+                      (keydown.space)="removePhoto($index)"
                       class="photo-remove-btn"
                       aria-label="Supprimer la photo"
                       title="Supprimer"
+                      tabindex="0"
                     >
                       <lucide-icon [img]="X" [size]="16"></lucide-icon>
                     </button>
@@ -215,7 +230,7 @@
                 Publier le produit
               }
             </button>
-            <button type="button" class="btn btn-secondary" (click)="resetForm()">
+            <button type="button" class="btn btn-secondary" (click)="resetForm()" (keydown.enter)="resetForm()" (keydown.space)="resetForm()" tabindex="0">
               Réinitialiser
             </button>
           </div>
@@ -237,7 +252,7 @@
             <lucide-icon [img]="Package" [size]="48"></lucide-icon>
             <h3>Aucun produit publié</h3>
             <p>Vous n'avez pas encore publié de produit.</p>
-            <button class="btn btn-primary" (click)="setView('sell')">
+            <button class="btn btn-primary" (click)="setView('sell')" (keydown.enter)="setView('sell')" (keydown.space)="setView('sell')" tabindex="0">
               <lucide-icon [img]="Plus" [size]="18"></lucide-icon>
               Publier mon premier produit
             </button>
@@ -248,7 +263,7 @@
               <div class="product-card">
                 <div class="product-image">
                   @if (product.photos && product.photos.length > 0) {
-                    <img [src]="'/api/uploads/' + product.photos[0].url" [alt]="product.title" />
+                    <img [src]="product.photos[0].url" [alt]="product.title" title="Photo principale du produit: {{product.title}}" />
                   } @else {
                     <div class="no-image">
                       <lucide-icon [img]="Image" [size]="32"></lucide-icon>
@@ -272,11 +287,11 @@
                   </div>
                 </div>
                 <div class="product-actions">
-                  <button class="btn btn-outline" (click)="editProduct(product)">
+                  <button class="btn btn-outline" (click)="editProduct(product)" (keydown.enter)="editProduct(product)" (keydown.space)="editProduct(product)" tabindex="0" aria-label="Modifier le produit {{product.title}}">
                     <lucide-icon [img]="Edit" [size]="16"></lucide-icon>
                     Modifier
                   </button>
-                  <button class="btn btn-outline btn-danger" (click)="deleteProduct(product)">
+                  <button class="btn btn-outline btn-danger" (click)="deleteProduct(product)" (keydown.enter)="deleteProduct(product)" (keydown.space)="deleteProduct(product)" tabindex="0" aria-label="Supprimer le produit {{product.title}}">
                     <lucide-icon [img]="Trash2" [size]="16"></lucide-icon>
                     Supprimer
                   </button>
@@ -361,7 +376,7 @@
               <small class="form-hint">Optionnel - pour être contacté directement</small>
             </div>
           </div>
-          <div class="form-hint">Ce numéro sera affiché avec vos produits</div>
+          <small class="form-hint">Ce numéro sera affiché avec vos produits</small>
 
           <div class="profile-stats">
             <div class="stat-item">
@@ -374,7 +389,7 @@
           </div>
 
           <div class="profile-actions">
-            <button class="btn btn-primary" (click)="updateProfile()">
+            <button class="btn btn-primary" (click)="updateProfile()" (keydown.enter)="updateProfile()" (keydown.space)="updateProfile()" tabindex="0">
               <lucide-icon [img]="Save" [size]="18"></lucide-icon>
               Sauvegarder les modifications
             </button>
@@ -388,10 +403,10 @@
         <lucide-icon [img]="LogIn" [size]="48"></lucide-icon>
         <h2>Authentification requise</h2>
         <p>Vous devez être connecté pour accéder à votre espace vendeur.</p>
-        <a routerLink="/seller-auth" class="btn btn-primary">
-          <lucide-icon [img]="LogIn" [size]="18"></lucide-icon>
-          Se connecter / S'inscrire
-        </a>
+          <a routerLink="/seller-auth" class="btn btn-primary" tabindex="0">
+            <lucide-icon [img]="LogIn" [size]="18"></lucide-icon>
+            Se connecter / S'inscrire
+          </a>
       </div>
     </div>
   }
@@ -399,18 +414,23 @@
 
 <!-- Modal Caméra -->
 @if (showCamera()) {
-  <div class="camera-modal-overlay" (click)="closeCamera()">
-    <div class="camera-modal" (click)="$event.stopPropagation()">
+  <div class="camera-modal-overlay" (click)="closeCamera()" (keydown.enter)="closeCamera()" (keydown.space)="closeCamera()" (keyup.enter)="closeCamera()" (keyup.space)="closeCamera()" tabindex="0" role="dialog" aria-label="Fermer la caméra" aria-modal="true">
+    <div class="camera-modal" (click)="$event.stopPropagation()" role="document">
       <div class="camera-header">
         <h3>
           <lucide-icon [img]="Camera" [size]="24"></lucide-icon>
           Prendre une photo
         </h3>
-        <button 
-          type="button" 
-          class="camera-close-btn" 
+        <button
+          type="button"
+          class="camera-close-btn"
           (click)="closeCamera()"
+          (keydown.enter)="closeCamera()"
+          (keydown.space)="closeCamera()"
           aria-label="Fermer la caméra"
+          tabindex="0"
+          (keyup.enter)="closeCamera()"
+          (keyup.space)="closeCamera()"
         >
           <lucide-icon [img]="X" [size]="24"></lucide-icon>
         </button>
@@ -431,6 +451,9 @@
           type="button" 
           class="btn btn-primary btn-capture"
           (click)="capturePhoto()"
+          (keydown.enter)="capturePhoto()"
+          (keydown.space)="capturePhoto()"
+          tabindex="0"
         >
           <lucide-icon [img]="Camera" [size]="32"></lucide-icon>
           <span>Capturer</span>
@@ -439,6 +462,9 @@
           type="button" 
           class="btn btn-secondary"
           (click)="closeCamera()"
+          (keydown.enter)="closeCamera()"
+          (keydown.space)="closeCamera()"
+          tabindex="0"
         >
           Annuler
         </button>

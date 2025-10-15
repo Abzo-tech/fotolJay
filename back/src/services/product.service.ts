@@ -63,7 +63,7 @@ export class ProductService {
   // Récupérer tous les produits (avec filtres)
   async getProducts(filters?: {
     status?: ProductStatus;
-    sellerEmail?: string;
+    sellerId?: string;
     search?: string;
     page?: number;
     limit?: number;
@@ -78,8 +78,8 @@ export class ProductService {
       where.status = filters.status;
     }
 
-    if (filters?.sellerEmail) {
-      where.sellerEmail = filters.sellerEmail;
+    if (filters?.sellerId) {
+      where.sellerId = filters.sellerId;
     }
 
     if (filters?.search) {

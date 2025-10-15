@@ -41,8 +41,8 @@ router.get('/:id', product_controller_1.default.getProductById.bind(product_cont
 // Publier un produit (authentification requise)
 router.post('/', auth_middleware_1.authenticateToken, upload.array('photos', 5), // Maximum 5 photos
 product_controller_1.default.createProduct.bind(product_controller_1.default));
-// Récupérer les produits d'un vendeur par email
-router.get('/seller/:email', product_controller_1.default.getSellerProducts.bind(product_controller_1.default));
+// Récupérer les produits du vendeur actuellement connecté
+router.get('/seller', auth_middleware_1.authenticateToken, product_controller_1.default.getCurrentSellerProducts.bind(product_controller_1.default));
 // Routes de modération (MODERATOR ou ADMIN)
 router.get('/moderation/pending', auth_middleware_1.authenticateToken, rbac_middleware_1.requireModerator, product_controller_1.default.getPendingProducts.bind(product_controller_1.default));
 // Approuver un produit (MODERATOR ou ADMIN)
