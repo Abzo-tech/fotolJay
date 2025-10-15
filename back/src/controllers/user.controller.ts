@@ -97,6 +97,43 @@ export class UserController {
       res.status(500).json({ error: error.message || 'Internal server error' });
     }
   }
+
+  // Acheter des crédits
+  async buyCredits(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { amount } = req.body;
+
+      if (typeof amount !== 'number' || amount <= 0) {
+        return res.status(400).json({ error: 'Amount must be a positive number' });
+      }
+
+      const user = await userService.buyCredits(id, amount);
+      res.json(user);
+    } catch (error: any) {
+      console.error('Error buying credits:', error);
+      if (error.message === 'User not found' || error.message === 'Amount must be positive') {
+        return res.status(400).json({ error: error.message });
+      }
+      res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+  }
+
+  // Utiliser des crédits pour devenir VIP
+  async useCreditsForVip(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const user = await userService.useCreditsForVip(id);
+      res.json(user);
+    } catch (error: any) {
+      console.error('Error using credits for VIP:', error);
+      if (error.message === 'User not found' || error.message === 'Insufficient credits') {
+        return res.status(400).json({ error: error.message });
+      }
+      res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+  }
 }
 
 export default new UserController();

@@ -48,6 +48,8 @@ export interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
+  isVip: boolean;
+  credits: number;
   isActive: boolean;
 }
 

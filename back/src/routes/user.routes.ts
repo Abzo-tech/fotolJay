@@ -41,4 +41,17 @@ router.put(
   userController.updateUserStatus.bind(userController)
 );
 
+// Routes pour les crédits - accessibles aux utilisateurs authentifiés
+router.post(
+  '/:id/credits/buy',
+  authenticateToken,
+  userController.buyCredits.bind(userController)
+);
+
+router.post(
+  '/:id/credits/use-for-vip',
+  authenticateToken,
+  userController.useCreditsForVip.bind(userController)
+);
+
 export default router;

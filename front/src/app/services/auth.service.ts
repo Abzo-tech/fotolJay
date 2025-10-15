@@ -93,4 +93,53 @@ export class AuthService {
     const role = this.currentUser()?.role;
     return role === 'MODERATOR' || role === 'ADMIN';
   }
+
+  // Crédits
+  buyCredits(amount: number): Promise<User> {
+    return new Promise((resolve, reject) => {
+      const userId = this.currentUser()?.id;
+      if (!userId) {
+        reject(new Error('User not authenticated'));
+        return;
+      }
+
+      this.apiService.buyCredits(userId, amount).subscribe({
+        next: (user: User) => {
+          this.currentUser.set(user);
+          resolve(user);
+        },
+        error: (error: any) => {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  useCreditsForVip(): Promise<User> {
+    return new Promise((resolve, reject) => {
+      const userId = this.currentUser()?.id;
+      if (!userId) {
+        reject(new Error('User not authenticated'));
+        return;
+      }
+
+      this.apiService.useCreditsForVip(userId).subscribe({
+        next: (user: User) => {
+          this.currentUser.set(user);
+          resolve(user);
+        },
+        error: (error: any) => {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  getCredits(): number {
+    return this.currentUser()?.credits || 0;
+  }
+
+  isVip(): boolean {
+    return this.currentUser()?.isVip || false;
+  }
 }

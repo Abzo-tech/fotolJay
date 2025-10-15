@@ -1,12 +1,14 @@
-import { Component, OnInit, AfterViewInit, signal, PLATFORM_ID, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, PLATFORM_ID, inject, ViewChild } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { Product } from '../../models/product.model';
-import { LucideAngularModule, Camera, Search, Eye, Star, Plus, X, Phone, Mail, User, Menu, Palette } from 'lucide-angular';
+import { LucideAngularModule, Camera, Search, Eye, Star, Plus, X, Phone, Mail, User, Menu, Palette, Coins } from 'lucide-angular';
 import { NoDownloadDirective } from '../../directives/no-download.directive';
 import { ThemeSelectorComponent } from '../theme-selector/theme-selector';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-home',
@@ -14,10 +16,12 @@ import { ThemeSelectorComponent } from '../theme-selector/theme-selector';
   templateUrl: './home.html',
   styleUrls: ['./home.css']
 })
-export class HomeComponent implements OnInit, AfterViewInit {
+export class HomeComponent implements OnInit {
   private platformId = inject(PLATFORM_ID);
-  private apiService = inject(ApiService);
-  
+  public apiService = inject(ApiService);
+  public authService = inject(AuthService);
+  private toastService = inject(ToastService);
+
   readonly Camera = Camera;
   readonly Search = Search;
   readonly Eye = Eye;
@@ -29,7 +33,8 @@ export class HomeComponent implements OnInit, AfterViewInit {
   readonly User = User;
   readonly Menu = Menu;
   readonly Palette = Palette;
-  
+  readonly Coins = Coins;
+
   products = signal<Product[]>([]);
   loading = signal<boolean>(false);
   searchTerm = signal<string>('');
@@ -38,16 +43,16 @@ export class HomeComponent implements OnInit, AfterViewInit {
   showModal = signal<boolean>(false);
   mobileMenuOpen = signal<boolean>(false);
 
+  // Crédits
+  showCreditsModal = signal<boolean>(false);
+  selectedCreditsAmount = signal<number | null>(null);
+
   @ViewChild('themeSelector') themeSelector?: ThemeSelectorComponent;
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.loadProducts();
     }
-  }
-
-  ngAfterViewInit(): void {
-    // Plus besoin du themeSelectorComponent car on utilise directement le composant dans la navbar
   }
 
   loadProducts(): void {
@@ -107,5 +112,42 @@ export class HomeComponent implements OnInit, AfterViewInit {
     } else {
       console.error('Theme selector not found');
     }
+  }
+
+  // Crédits methods
+  openCreditsModal(): void {
+    this.showCreditsModal.set(true);
+  }
+
+  closeCreditsModal(): void {
+    this.showCreditsModal.set(false);
+    this.selectedCreditsAmount.set(null);
+  }
+
+  selectCreditsAmount(amount: number): void {
+    this.selectedCreditsAmount.set(amount);
+  }
+
+  buyCredits(): void {
+    const amount = this.selectedCreditsAmount();
+    if (!amount) return;
+
+    this.authService.buyCredits(amount).then(() => {
+      this.toastService.success(`Achat de ${amount} crédits réussi !`);
+      this.closeCreditsModal();
+    }).catch((error) => {
+      this.toastService.error('Erreur lors de l\'achat de crédits');
+      console.error('Buy credits error:', error);
+    });
+  }
+
+  upgradeToVip(): void {
+    this.authService.useCreditsForVip().then(() => {
+      this.toastService.success('Félicitations ! Vous êtes maintenant VIP !');
+      this.closeModal();
+    }).catch((error) => {
+      this.toastService.error('Erreur lors de la mise à niveau VIP');
+      console.error('Upgrade to VIP error:', error);
+    });
   }
 }

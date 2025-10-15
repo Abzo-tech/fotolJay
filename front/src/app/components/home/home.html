@@ -9,6 +9,16 @@
 
   <div class="navbar-right">
     <app-theme-selector #themeSelector></app-theme-selector>
+    @if (authService.isAuthenticated()) {
+    <div class="navbar-link">
+      <lucide-icon [img]="Coins" [size]="16"></lucide-icon>
+      {{ authService.getCredits() }} crédits
+    </div>
+    <button class="btn btn-secondary" (click)="openCreditsModal()">
+      <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
+      Acheter Crédits
+    </button>
+    }
     <a routerLink="/seller-auth" class="navbar-link">Espace Vendeur</a>
     <a routerLink="/sell" class="btn btn-primary">
       <lucide-icon [img]="Plus" [size]="18"></lucide-icon>
@@ -170,6 +180,62 @@
   } }
 </div>
 
+<!-- Credits Modal -->
+@if (showCreditsModal()) {
+<div class="credits-modal" (click)="closeCreditsModal()">
+  <div class="credits-modal-content" (click)="$event.stopPropagation()">
+    <h2 class="credits-modal-title">Acheter des Crédits</h2>
+    <p class="credits-modal-subtitle">Choisissez le nombre de crédits à acheter</p>
+
+    <div class="credits-options">
+      <div
+        class="credits-option"
+        [class.selected]="selectedCreditsAmount() === 10"
+        (click)="selectCreditsAmount(10)"
+      >
+        <div class="credits-amount">10 Crédits</div>
+        <div class="credits-price">5€</div>
+      </div>
+      <div
+        class="credits-option"
+        [class.selected]="selectedCreditsAmount() === 25"
+        (click)="selectCreditsAmount(25)"
+      >
+        <div class="credits-amount">25 Crédits</div>
+        <div class="credits-price">10€</div>
+      </div>
+      <div
+        class="credits-option"
+        [class.selected]="selectedCreditsAmount() === 50"
+        (click)="selectCreditsAmount(50)"
+      >
+        <div class="credits-amount">50 Crédits</div>
+        <div class="credits-price">20€</div>
+      </div>
+      <div
+        class="credits-option"
+        [class.selected]="selectedCreditsAmount() === 100"
+        (click)="selectCreditsAmount(100)"
+      >
+        <div class="credits-amount">100 Crédits</div>
+        <div class="credits-price">35€</div>
+      </div>
+    </div>
+
+    <div class="credits-modal-actions">
+      <button class="btn-cancel" (click)="closeCreditsModal()">Annuler</button>
+      <button
+        class="btn btn-primary"
+        (click)="buyCredits()"
+        [disabled]="!selectedCreditsAmount()"
+      >
+        Acheter {{ selectedCreditsAmount() }} Crédits
+      </button>
+    </div>
+  </div>
+</div>
+}
+
 <!-- Modal Product Details -->
 @if (showModal() && selectedProduct(); as product) {
 <div class="modal-overlay" (click)="closeModal()">
@@ -214,6 +280,30 @@
         <h3 class="modal-section-title">Description</h3>
         <p class="modal-description">{{ product.description }}</p>
       </div>
+
+      <!-- VIP Section for authenticated users -->
+      @if (authService.isAuthenticated() && !authService.isVip()) {
+      <div class="modal-section">
+        <div class="vip-section">
+          <h3 class="vip-title">Devenez VIP !</h3>
+          <p class="vip-subtitle">Profitez d'avantages exclusifs avec le statut VIP</p>
+          <div class="credits-display">
+            <lucide-icon [img]="Coins" [size]="20"></lucide-icon>
+            Crédits disponibles: {{ authService.getCredits() }}
+          </div>
+          <div class="vip-actions">
+            <button
+              class="btn-vip"
+              (click)="upgradeToVip()"
+              [disabled]="authService.getCredits() < 50"
+            >
+              <lucide-icon [img]="Star" [size]="16"></lucide-icon>
+              Devenir VIP (50 crédits)
+            </button>
+          </div>
+        </div>
+      </div>
+      }
 
       <div class="modal-section">
         <h3 class="modal-section-title">

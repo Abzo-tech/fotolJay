@@ -131,6 +131,23 @@ export class ApiService {
     });
   }
 
+  /** ===================== 💰 CRÉDITS ===================== */
+  buyCredits(userId: string, amount: number): Observable<User> {
+    return this.http.post<User>(
+      `${this.apiUrl}/users/${userId}/credits/buy`,
+      { amount },
+      { headers: this.getHeaders(true) }
+    );
+  }
+
+  useCreditsForVip(userId: string): Observable<User> {
+    return this.http.post<User>(
+      `${this.apiUrl}/users/${userId}/credits/use-for-vip`,
+      {},
+      { headers: this.getHeaders(true) }
+    );
+  }
+
   /** ===================== ⚙️ MÉTHODES GÉNÉRIQUES ===================== */
   post<T>(endpoint: string, body: any, includeAuth = false): Observable<T> {
     return this.http.post<T>(`${this.apiUrl}${endpoint}`, body, {

@@ -129,6 +129,7 @@ export class UserService {
         phone: true,
         role: true,
         isVip: true,
+        credits: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -140,6 +141,73 @@ export class UserService {
     }
 
     return user;
+  }
+
+  // Acheter des crédits (test endpoint - ajoute simplement les crédits)
+  async buyCredits(userId: string, amount: number) {
+    if (amount <= 0) {
+      throw new Error('Amount must be positive');
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return prisma.user.update({
+      where: { id: userId },
+      data: { credits: { increment: amount } },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        isVip: true,
+        credits: true,
+        isActive: true,
+      },
+    });
+  }
+
+  // Utiliser des crédits pour VIP (exemple: 50 crédits pour VIP)
+  async useCreditsForVip(userId: string) {
+    const VIP_COST = 50;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.credits < VIP_COST) {
+      throw new Error('Insufficient credits');
+    }
+
+    return prisma.user.update({
+      where: { id: userId },
+      data: {
+        credits: { decrement: VIP_COST },
+        isVip: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        isVip: true,
+        credits: true,
+        isActive: true,
+      },
+    });
   }
 }
 

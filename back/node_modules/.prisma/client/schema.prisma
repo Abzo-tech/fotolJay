@@ -21,6 +21,7 @@ model User {
   phone               String?
   role                UserRole @default(SELLER)
   isVip               Boolean  @default(false) @map("is_vip")
+  credits             Int      @default(0)
   isActive            Boolean  @default(true) @map("is_active")
   forcePasswordChange Boolean  @default(false) @map("force_password_change")
 
