@@ -93,6 +93,17 @@
       </button>
       <button
         class="seller-nav-btn"
+        [class.active]="currentView() === 'credits'"
+        (click)="setView('credits')"
+        (keydown.enter)="setView('credits')"
+        (keydown.space)="setView('credits')"
+        tabindex="0"
+      >
+        <lucide-icon [img]="Coins" [size]="20"></lucide-icon>
+        Crédits ({{ currentUser()?.credits || 0 }})
+      </button>
+      <button
+        class="seller-nav-btn"
         [class.active]="currentView() === 'profile'"
         (click)="setView('profile')"
         (keydown.enter)="setView('profile')"
@@ -209,6 +220,53 @@
             ></textarea>
           </div>
 
+          <div class="form-group">
+            <label class="form-label" for="category-input">Catégorie *</label>
+            <select
+              id="category-input"
+              [value]="category()"
+              (change)="category.set($any($event.target).value)"
+              name="category"
+              class="form-input"
+              required
+            >
+              <option value="">Sélectionnez une catégorie</option>
+              <option value="Electronics">Électronique</option>
+              <option value="Clothing">Vêtements</option>
+              <option value="HomeGarden">Maison & Jardin</option>
+              <option value="Books">Livres</option>
+              <option value="Other">Autre</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="price-input">Prix en CFA *</label>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <input
+                id="price-input"
+                type="number"
+                min="1"
+                step="100"
+                [value]="price()"
+                (input)="price.set(+$any($event.target).value || 0)"
+                name="price"
+                class="form-input"
+                placeholder="50000"
+                required
+                style="flex: 1;"
+              />
+              <span style="font-weight: 600; color: #059669;">CFA</span>
+            </div>
+            <small class="form-hint">Prix minimum: 100 CFA. Utilisez des multiples de 100 pour les CFA.</small>
+          </div>
+
+          @if (analyzingImage()) {
+            <div class="form-group" style="text-align: center; padding: 1rem; background: #f0f9ff; border-radius: 0.5rem; border-left: 4px solid #3b82f6;">
+              <lucide-icon [img]="Loader2" [size]="20" class="icon-inline" style="animation: spin 1s linear infinite;"></lucide-icon>
+              <span style="color: #3b82f6; font-weight: 500;">Analyse IA en cours... Les détails seront auto-remplis automatiquement.</span>
+            </div>
+          }
+
           <div class="info-box">
             <p class="info-text info-text-small">
               <lucide-icon [img]="AlertCircle" [size]="18" class="icon-inline"></lucide-icon>
@@ -275,6 +333,12 @@
                   <p class="product-status" [class]="'status-' + product.status">
                     {{ getStatusLabel(product.status) }}
                   </p>
+                  @if (product.isVip) {
+                    <span class="vip-badge">
+                      <lucide-icon [img]="Star" [size]="14"></lucide-icon>
+                      VIP
+                    </span>
+                  }
                   <div class="product-meta">
                     <span class="meta-item">
                       <lucide-icon [img]="Calendar" [size]="14"></lucide-icon>
@@ -287,6 +351,12 @@
                   </div>
                 </div>
                 <div class="product-actions">
+                  @if (product.status === 'APPROVED' && !product.isVip && (currentUser()?.credits || 0) >= 10) {
+                    <button class="btn btn-vip" (click)="upgradeToVip(product)" (keydown.enter)="upgradeToVip(product)" (keydown.space)="upgradeToVip(product)" tabindex="0" aria-label="Passer en VIP le produit {{product.title}}">
+                      <lucide-icon [img]="Star" [size]="16"></lucide-icon>
+                      VIP (10 crédits)
+                    </button>
+                  }
                   <button class="btn btn-outline" (click)="editProduct(product)" (keydown.enter)="editProduct(product)" (keydown.space)="editProduct(product)" tabindex="0" aria-label="Modifier le produit {{product.title}}">
                     <lucide-icon [img]="Edit" [size]="16"></lucide-icon>
                     Modifier
@@ -300,6 +370,108 @@
             }
           </div>
         }
+      </div>
+    } @else if (currentView() === 'credits') {
+      <!-- Gestion des crédits -->
+      <div class="seller-credits">
+        <div class="credits-header">
+          <h2 class="credits-title">
+            <lucide-icon [img]="Coins" [size]="24"></lucide-icon>
+            Gestion des Crédits
+          </h2>
+          <p class="credits-subtitle">Achetez des crédits et gérez vos avantages VIP</p>
+        </div>
+
+        <div class="credits-balance">
+          <div class="balance-card">
+            <lucide-icon [img]="Coins" [size]="32"></lucide-icon>
+            <div class="balance-info">
+              <span class="balance-label">Crédits disponibles</span>
+              <span class="balance-amount">{{ currentUser()?.credits || 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="credits-sections">
+          <!-- Acheter des crédits -->
+          <div class="credits-section">
+            <h3 class="section-title">Acheter des Crédits</h3>
+            <div class="credits-packages">
+              <div class="package-card" (click)="selectCreditsPackage(10)">
+                <div class="package-amount">10 Crédits</div>
+                <div class="package-price">1000 CFA</div>
+                <div class="package-description">Parfait pour commencer</div>
+              </div>
+              <div class="package-card" (click)="selectCreditsPackage(15)">
+                <div class="package-amount">15 Crédits</div>
+                <div class="package-price">1500 CFA</div>
+                <div class="package-description">Excellent rapport qualité-prix</div>
+              </div>
+              <div class="package-card" (click)="selectCreditsPackage(25)">
+                <div class="package-amount">25 Crédits</div>
+                <div class="package-price">2500 CFA</div>
+                <div class="package-description">Pour les vendeurs actifs</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Avantages VIP -->
+          <div class="credits-section">
+            <h3 class="section-title">Avantages VIP</h3>
+            <div class="vip-benefits">
+              <div class="benefit-item">
+                <lucide-icon [img]="Star" [size]="20"></lucide-icon>
+                <div class="benefit-info">
+                  <span class="benefit-title">Statut VIP</span>
+                  <span class="benefit-description">10 crédits pour 30 jours de visibilité accrue</span>
+                </div>
+              </div>
+              <div class="benefit-item">
+                <lucide-icon [img]="Calendar" [size]="20"></lucide-icon>
+                <div class="benefit-info">
+                  <span class="benefit-title">Extension de durée</span>
+                  <span class="benefit-description">5 crédits par jour supplémentaire</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Historique des transactions -->
+          <div class="credits-section">
+            <h3 class="section-title">Historique des Transactions</h3>
+            @if (creditsTransactions().length === 0) {
+              <div class="empty-transactions">
+                <lucide-icon [img]="Coins" [size]="48"></lucide-icon>
+                <p>Aucune transaction pour le moment</p>
+              </div>
+            } @else {
+              <div class="transactions-list">
+                @for (transaction of creditsTransactions(); track transaction.id) {
+                  <div class="transaction-item">
+                    <div class="transaction-icon">
+                      @if (transaction.type === 'PURCHASE') {
+                        <lucide-icon [img]="Plus" [size]="16"></lucide-icon>
+                      } @else if (transaction.type === 'DEDUCTION') {
+                        <lucide-icon [img]="Minus" [size]="16"></lucide-icon>
+                      }
+                    </div>
+                    <div class="transaction-info">
+                      <span class="transaction-description">{{ transaction.description }}</span>
+                      <span class="transaction-date">{{ formatDate(transaction.createdAt) }}</span>
+                    </div>
+                    <div class="transaction-amount" [class]="transaction.type === 'PURCHASE' ? 'positive' : 'negative'">
+                      @if (transaction.type === 'PURCHASE') {
+                        +{{ transaction.amount }}
+                      } @else {
+                        -{{ transaction.amount }}
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
       </div>
     } @else if (currentView() === 'profile') {
       <!-- Profil vendeur -->

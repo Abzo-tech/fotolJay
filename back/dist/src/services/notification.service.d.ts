@@ -4,14 +4,14 @@ export declare class NotificationService {
         notifications: {
             id: string;
             createdAt: Date;
-            productId: string | null;
             type: import(".prisma/client").$Enums.NotificationType;
+            userId: string | null;
+            productId: string | null;
             message: string;
             isRead: boolean;
             recipientEmail: string;
             sent: boolean;
             sentAt: Date | null;
-            userId: string | null;
         }[];
         pagination: {
             total: number;
@@ -24,14 +24,14 @@ export declare class NotificationService {
     markAsRead(id: string, userId: string): Promise<{
         id: string;
         createdAt: Date;
-        productId: string | null;
         type: import(".prisma/client").$Enums.NotificationType;
+        userId: string | null;
+        productId: string | null;
         message: string;
         isRead: boolean;
         recipientEmail: string;
         sent: boolean;
         sentAt: Date | null;
-        userId: string | null;
     }>;
     markAllAsRead(userId: string): Promise<{
         message: string;
@@ -48,14 +48,14 @@ export declare class NotificationService {
     }): Promise<{
         id: string;
         createdAt: Date;
-        productId: string | null;
         type: import(".prisma/client").$Enums.NotificationType;
+        userId: string | null;
+        productId: string | null;
         message: string;
         isRead: boolean;
         recipientEmail: string;
         sent: boolean;
         sentAt: Date | null;
-        userId: string | null;
     }>;
     getUnreadCount(userId: string): Promise<{
         unreadCount: number;

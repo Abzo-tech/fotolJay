@@ -13,9 +13,17 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
-import { LucideAngularModule, Camera, X, AlertCircle, CheckCircle, User, LogIn, Home, LogOut, Menu, Palette, LayoutDashboard, Package, Plus, Edit, Trash2, Calendar, Eye, Save, Image } from 'lucide-angular';
+import { LucideAngularModule, Camera, X, AlertCircle, CheckCircle, User, LogIn, Home, LogOut, Menu, Palette, LayoutDashboard, Package, Plus, Edit, Trash2, Calendar, Eye, Save, Image, Coins, Star, Minus, Loader2 } from 'lucide-angular';
 import { z } from 'zod';
 import { Product, ProductStatus } from '../../models/product.model';
+
+interface CreditTransaction {
+  id: string;
+  type: 'PURCHASE' | 'DEDUCTION';
+  description: string;
+  amount: number;
+  createdAt: string;
+}
 
 const productSchema = z.object({
   title: z
@@ -83,9 +91,13 @@ export class SellComponent implements OnInit, OnDestroy {
   readonly Eye = Eye;
   readonly Save = Save;
   readonly Image = Image;
+  readonly Coins = Coins;
+  readonly Star = Star;
+  readonly Minus = Minus;
+  readonly Loader2 = Loader2;
 
   isAuthenticated = signal<boolean>(false);
-  currentUser = signal<{ firstName: string; lastName: string; email: string } | null>(null);
+  currentUser = signal<{ firstName: string; lastName: string; email: string; credits: number } | null>(null);
 
   photos = signal<File[]>([]);
   photoPreviewUrls = signal<string[]>([]);
@@ -93,6 +105,9 @@ export class SellComponent implements OnInit, OnDestroy {
 
   title = signal<string>('');
   description = signal<string>('');
+  category = signal<string>('');
+  price = signal<number>(0);
+  analyzingImage = signal<boolean>(false);
 
   // Informations vendeur (éditables)
   sellerFirstName = signal<string>('');
@@ -103,8 +118,24 @@ export class SellComponent implements OnInit, OnDestroy {
   submitting = signal<boolean>(false);
   showCamera = signal<boolean>(false);
   mobileMenuOpen = signal<boolean>(false);
-  currentView = signal<'sell' | 'dashboard' | 'profile'>('sell');
+  currentView = signal<'sell' | 'dashboard' | 'profile' | 'credits'>('sell');
   sellerProducts = signal<Product[]>([]);
+  creditsTransactions = signal<CreditTransaction[]>([
+    {
+      id: '1',
+      type: 'PURCHASE',
+      description: 'Achat de 25 crédits',
+      amount: 25,
+      createdAt: new Date(Date.now() - 86400000).toISOString(), // yesterday
+    },
+    {
+      id: '2',
+      type: 'DEDUCTION',
+      description: 'Upgrade VIP produit',
+      amount: 10,
+      createdAt: new Date().toISOString(),
+    }
+  ]);
   stream: MediaStream | null = null;
 
   ngOnInit(): void {
@@ -127,6 +158,8 @@ export class SellComponent implements OnInit, OnDestroy {
 
             // Charger les produits du vendeur
             this.loadSellerProducts();
+            // Charger les transactions de crédits
+            this.loadCreditsTransactions();
           },
           error: () => {
             // Token invalide ou expiré
@@ -147,7 +180,7 @@ export class SellComponent implements OnInit, OnDestroy {
     this.closeCamera();
   }
 
-  setView(view: 'sell' | 'dashboard' | 'profile'): void {
+  setView(view: 'sell' | 'dashboard' | 'profile' | 'credits'): void {
     this.currentView.set(view);
   }
 
@@ -167,6 +200,35 @@ export class SellComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Erreur lors du chargement des produits:', error);
         this.toastService.error('Erreur lors du chargement de vos produits');
+      }
+    });
+  }
+
+  loadCreditsTransactions(): void {
+    this.apiService.getCreditsTransactions().subscribe({
+      next: (response: { transactions: CreditTransaction[]; pagination: { total: number; page: number; limit: number; totalPages: number } }) => {
+        this.creditsTransactions.set(response.transactions);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des transactions:', error);
+        this.toastService.error('Erreur lors du chargement des transactions');
+        // Fallback to dummy data if API fails
+        this.creditsTransactions.set([
+          {
+            id: '1',
+            type: 'PURCHASE',
+            description: 'Achat de 25 crédits',
+            amount: 25,
+            createdAt: new Date(Date.now() - 86400000).toISOString(),
+          },
+          {
+            id: '2',
+            type: 'DEDUCTION',
+            description: 'Upgrade VIP produit "Appareil photo vintage"',
+            amount: 10,
+            createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+          }
+        ]);
       }
     });
   }
@@ -200,8 +262,11 @@ export class SellComponent implements OnInit, OnDestroy {
   resetForm(): void {
     this.title.set('');
     this.description.set('');
+    this.category.set('');
+    this.price.set(0);
     this.photos.set([]);
     this.photoPreviewUrls.set([]);
+    this.analyzingImage.set(false);
     this.toastService.info('Formulaire réinitialisé');
   }
 
@@ -215,11 +280,110 @@ export class SellComponent implements OnInit, OnDestroy {
     this.toastService.info(`Fonctionnalité d'édition à venir pour le produit: ${product.title}`);
   }
 
+  upgradeToVip(product: Product): void {
+    if (confirm(`Passer "${product.title}" en mode VIP pour 10 crédits ? Cela donnera une visibilité accrue pendant 30 jours.`)) {
+      this.apiService.upgradeProductToVip(product.id).subscribe({
+        next: () => {
+          this.toastService.success('Produit passé en mode VIP avec succès !');
+          
+          // Recharger les données utilisateur pour mettre à jour le solde des crédits
+          this.apiService.getCurrentUser().subscribe({
+            next: (userData) => {
+              this.currentUser.set(userData);
+              this.toastService.info(`Nouveau solde: ${userData.credits} crédits`);
+            },
+            error: (error) => {
+              console.error('Erreur mise à jour utilisateur:', error);
+            }
+          });
+          
+          // Recharger les produits pour afficher le badge VIP
+          this.loadSellerProducts();
+          
+          // Recharger les transactions pour inclure la déduction VIP
+          this.loadCreditsTransactions();
+        },
+        error: (error) => {
+          console.error('Erreur upgrade VIP:', error);
+          this.toastService.error('Erreur lors du passage en mode VIP');
+        }
+      });
+    }
+  }
+
   deleteProduct(product: Product): void {
     if (confirm(`Êtes-vous sûr de vouloir supprimer le produit "${product.title}" ?`)) {
-      // Temporairement désactivé jusqu'à implémentation de l'API
-      this.toastService.info('Fonctionnalité de suppression à venir');
+      this.apiService.deleteProduct(product.id).subscribe({
+        next: () => {
+          this.toastService.success('Produit supprimé avec succès');
+          this.loadSellerProducts();
+        },
+        error: (error) => {
+          console.error('Erreur suppression produit:', error);
+          this.toastService.error('Erreur lors de la suppression du produit');
+        }
+      });
     }
+  }
+
+  selectCreditsPackage(amount: number): void {
+    // Implémenter l'achat de crédits avec PayTech
+    this.toastService.info(`Achat de ${amount} crédits en cours...`);
+
+    // Déterminer le package basé sur le montant
+    let packageType: string;
+    switch (amount) {
+      case 10:
+        packageType = '10';
+        break;
+      case 15:
+        packageType = '15';
+        break;
+      case 25:
+        packageType = '25';
+        break;
+      default:
+        this.toastService.error('Package de crédits invalide');
+        return;
+    }
+
+    // Appeler l'API pour créer la session de paiement
+    this.apiService.buyCredits(packageType).subscribe({
+      next: (response: { message: string; credits: number } | { paymentUrl: string }) => {
+        if ('message' in response && response.message?.includes('test mode')) {
+          // Mode test: mise à jour locale sans redirection
+          this.toastService.success(`Succès! ${amount} crédits ajoutés à votre compte.`);
+          
+          // Recharger les données utilisateur pour mettre à jour le solde des crédits
+          this.apiService.getCurrentUser().subscribe({
+            next: (userData) => {
+              this.currentUser.set(userData);
+              this.toastService.info(`Nouveau solde: ${userData.credits} crédits`);
+            },
+            error: (error) => {
+              console.error('Erreur mise à jour utilisateur:', error);
+              this.toastService.warning('Crédits ajoutés, veuillez rafraîchir la page pour voir le nouveau solde.');
+            }
+          });
+
+          // Recharger les transactions pour inclure l'achat récent
+          this.loadCreditsTransactions();
+          
+          // Optionnel: basculer vers la vue crédits pour afficher les transactions
+          this.setView('credits');
+        } else if ('paymentUrl' in response && response.paymentUrl) {
+          // Mode production: redirection vers PayTech
+          this.toastService.info('Redirection vers le paiement sécurisé...');
+          window.location.href = response.paymentUrl;
+        } else {
+          this.toastService.error('Erreur lors de la création du paiement');
+        }
+      },
+      error: (error) => {
+        console.error('Erreur achat crédits:', error);
+        this.toastService.error('Erreur lors de l\'achat de crédits');
+      }
+    });
   }
 
   async openCamera(): Promise<void> {

@@ -43,9 +43,7 @@ export class HomeComponent implements OnInit {
   showModal = signal<boolean>(false);
   mobileMenuOpen = signal<boolean>(false);
 
-  // Crédits
-  showCreditsModal = signal<boolean>(false);
-  selectedCreditsAmount = signal<number | null>(null);
+
 
   @ViewChild('themeSelector') themeSelector?: ThemeSelectorComponent;
 
@@ -114,40 +112,23 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  // Crédits methods
-  openCreditsModal(): void {
-    this.showCreditsModal.set(true);
-  }
 
-  closeCreditsModal(): void {
-    this.showCreditsModal.set(false);
-    this.selectedCreditsAmount.set(null);
-  }
-
-  selectCreditsAmount(amount: number): void {
-    this.selectedCreditsAmount.set(amount);
-  }
-
-  buyCredits(): void {
-    const amount = this.selectedCreditsAmount();
-    if (!amount) return;
-
-    this.authService.buyCredits(amount).then(() => {
-      this.toastService.success(`Achat de ${amount} crédits réussi !`);
-      this.closeCreditsModal();
-    }).catch((error) => {
-      this.toastService.error('Erreur lors de l\'achat de crédits');
-      console.error('Buy credits error:', error);
-    });
-  }
 
   upgradeToVip(): void {
-    this.authService.useCreditsForVip().then(() => {
-      this.toastService.success('Félicitations ! Vous êtes maintenant VIP !');
-      this.closeModal();
-    }).catch((error) => {
-      this.toastService.error('Erreur lors de la mise à niveau VIP');
-      console.error('Upgrade to VIP error:', error);
+    const product = this.selectedProduct();
+    if (!product) return;
+
+    this.apiService.upgradeProductToVip(product.id).subscribe({
+      next: (response) => {
+        this.toastService.success('Produit mis à niveau VIP avec succès !');
+        this.closeModal();
+        // Refresh products to show updated status
+        this.loadProducts();
+      },
+      error: (error) => {
+        this.toastService.error('Erreur lors de la mise à niveau VIP');
+        console.error('Upgrade to VIP error:', error);
+      }
     });
   }
 }

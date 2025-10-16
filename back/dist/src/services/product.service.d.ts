@@ -3,6 +3,8 @@ export declare class ProductService {
     createProduct(data: {
         title: string;
         description: string;
+        category?: string;
+        price?: number;
         sellerId: string;
         photos: {
             url: string;
@@ -22,20 +24,22 @@ export declare class ProductService {
             createdAt: Date;
             url: string;
             publicId: string | null;
-            isPrimary: boolean;
             productId: string;
+            isPrimary: boolean;
         }[];
     } & {
         id: string;
         isVip: boolean;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
         description: string;
+        title: string;
         status: import(".prisma/client").$Enums.ProductStatus;
         views: number;
-        publishedAt: Date | null;
         sellerId: string;
+        expiresAt: Date | null;
+        vipUntil: Date | null;
+        publishedAt: Date | null;
     }>;
     getProducts(filters?: {
         status?: ProductStatus;
@@ -58,20 +62,22 @@ export declare class ProductService {
                 createdAt: Date;
                 url: string;
                 publicId: string | null;
-                isPrimary: boolean;
                 productId: string;
+                isPrimary: boolean;
             }[];
         } & {
             id: string;
             isVip: boolean;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
             description: string;
+            title: string;
             status: import(".prisma/client").$Enums.ProductStatus;
             views: number;
-            publishedAt: Date | null;
             sellerId: string;
+            expiresAt: Date | null;
+            vipUntil: Date | null;
+            publishedAt: Date | null;
         })[];
         pagination: {
             total: number;
@@ -94,20 +100,22 @@ export declare class ProductService {
             createdAt: Date;
             url: string;
             publicId: string | null;
-            isPrimary: boolean;
             productId: string;
+            isPrimary: boolean;
         }[];
     } & {
         id: string;
         isVip: boolean;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
         description: string;
+        title: string;
         status: import(".prisma/client").$Enums.ProductStatus;
         views: number;
-        publishedAt: Date | null;
         sellerId: string;
+        expiresAt: Date | null;
+        vipUntil: Date | null;
+        publishedAt: Date | null;
     }>;
     deleteProduct(id: string): Promise<{
         message: string;
@@ -125,20 +133,22 @@ export declare class ProductService {
             createdAt: Date;
             url: string;
             publicId: string | null;
-            isPrimary: boolean;
             productId: string;
+            isPrimary: boolean;
         }[];
     } & {
         id: string;
         isVip: boolean;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
         description: string;
+        title: string;
         status: import(".prisma/client").$Enums.ProductStatus;
         views: number;
-        publishedAt: Date | null;
         sellerId: string;
+        expiresAt: Date | null;
+        vipUntil: Date | null;
+        publishedAt: Date | null;
     }>;
     rejectProduct(id: string, reason?: string): Promise<{
         seller: {
@@ -153,20 +163,22 @@ export declare class ProductService {
             createdAt: Date;
             url: string;
             publicId: string | null;
-            isPrimary: boolean;
             productId: string;
+            isPrimary: boolean;
         }[];
     } & {
         id: string;
         isVip: boolean;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
         description: string;
+        title: string;
         status: import(".prisma/client").$Enums.ProductStatus;
         views: number;
-        publishedAt: Date | null;
         sellerId: string;
+        expiresAt: Date | null;
+        vipUntil: Date | null;
+        publishedAt: Date | null;
     }>;
     getPendingProducts(page?: number, limit?: number): Promise<{
         products: ({
@@ -183,20 +195,22 @@ export declare class ProductService {
                 createdAt: Date;
                 url: string;
                 publicId: string | null;
-                isPrimary: boolean;
                 productId: string;
+                isPrimary: boolean;
             }[];
         } & {
             id: string;
             isVip: boolean;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
             description: string;
+            title: string;
             status: import(".prisma/client").$Enums.ProductStatus;
             views: number;
-            publishedAt: Date | null;
             sellerId: string;
+            expiresAt: Date | null;
+            vipUntil: Date | null;
+            publishedAt: Date | null;
         })[];
         pagination: {
             total: number;
@@ -210,6 +224,66 @@ export declare class ProductService {
     }>;
     notifyExpiringProducts(): Promise<{
         notified: number;
+    }>;
+    upgradeVip(productId: string, userId: string): Promise<{
+        seller: {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phone: string;
+        };
+        photos: {
+            id: string;
+            createdAt: Date;
+            url: string;
+            publicId: string | null;
+            productId: string;
+            isPrimary: boolean;
+        }[];
+    } & {
+        id: string;
+        isVip: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string;
+        title: string;
+        status: import(".prisma/client").$Enums.ProductStatus;
+        views: number;
+        sellerId: string;
+        expiresAt: Date | null;
+        vipUntil: Date | null;
+        publishedAt: Date | null;
+    }>;
+    extendDuration(productId: string, userId: string, extraDays: number): Promise<{
+        seller: {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phone: string;
+        };
+        photos: {
+            id: string;
+            createdAt: Date;
+            url: string;
+            publicId: string | null;
+            productId: string;
+            isPrimary: boolean;
+        }[];
+    } & {
+        id: string;
+        isVip: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string;
+        title: string;
+        status: import(".prisma/client").$Enums.ProductStatus;
+        views: number;
+        sellerId: string;
+        expiresAt: Date | null;
+        vipUntil: Date | null;
+        publishedAt: Date | null;
     }>;
 }
 declare const _default: ProductService;

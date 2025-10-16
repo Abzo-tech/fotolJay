@@ -15,9 +15,9 @@ class ProductController {
             console.log('Body:', req.body);
             console.log('Files:', req.files);
             console.log('User:', req.user);
-            const { title, description } = req.body;
+            const { title, description, category, price } = req.body;
             const userId = req.user?.id;
-            console.log('Extracted data:', { title, description, userId });
+            console.log('Extracted data:', { title, description, category, price, userId });
             // Validation
             if (!title || !description) {
                 return res.status(400).json({ error: 'Title and description are required' });
@@ -163,6 +163,54 @@ class ProductController {
         }
         catch (error) {
             console.error('Error rejecting product:', error);
+            if (error.message === 'Product not found') {
+                return res.status(404).json({ error: error.message });
+            }
+            res.status(500).json({ error: error.message || 'Internal server error' });
+        }
+    }
+    // Upgrade VIP d'un produit
+    async upgradeVip(req, res) {
+        try {
+            const { id } = req.params;
+            const userId = req.user?.id;
+            if (!userId) {
+                return res.status(401).json({ error: 'Authentication required' });
+            }
+            const product = await product_service_1.default.upgradeVip(id, userId);
+            res.json({
+                message: 'Product upgraded to VIP successfully',
+                product
+            });
+        }
+        catch (error) {
+            console.error('Error upgrading product to VIP:', error);
+            if (error.message === 'Product not found') {
+                return res.status(404).json({ error: error.message });
+            }
+            res.status(500).json({ error: error.message || 'Internal server error' });
+        }
+    }
+    // Étendre la durée d'un produit
+    async extendDuration(req, res) {
+        try {
+            const { id } = req.params;
+            const { extraDays } = req.body;
+            const userId = req.user?.id;
+            if (!userId) {
+                return res.status(401).json({ error: 'Authentication required' });
+            }
+            if (!extraDays || extraDays <= 0) {
+                return res.status(400).json({ error: 'Extra days must be positive' });
+            }
+            const product = await product_service_1.default.extendDuration(id, userId, extraDays);
+            res.json({
+                message: `Product duration extended by ${extraDays} days`,
+                product
+            });
+        }
+        catch (error) {
+            console.error('Error extending product duration:', error);
             if (error.message === 'Product not found') {
                 return res.status(404).json({ error: error.message });
             }

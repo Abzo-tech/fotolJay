@@ -18,11 +18,6 @@ class CloudinaryUtil {
             const uploadStream = cloudinary_1.v2.uploader.upload_stream({
                 folder,
                 resource_type: 'image',
-                transformation: [
-                    { width: 1200, height: 1200, crop: 'limit' }, // Limiter la taille
-                    { quality: 'auto' }, // Optimisation automatique
-                    { fetch_format: 'auto' }, // Format optimal (WebP si supporté)
-                ],
             }, (error, result) => {
                 if (error) {
                     reject(error);

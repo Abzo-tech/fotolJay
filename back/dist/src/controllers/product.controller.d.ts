@@ -8,6 +8,8 @@ export declare class ProductController {
     getPendingProducts(req: Request, res: Response): Promise<void>;
     approveProduct(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     rejectProduct(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    upgradeVip(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    extendDuration(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
 }
 declare const _default: ProductController;
 export default _default;

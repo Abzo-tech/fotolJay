@@ -8,11 +8,17 @@ const user_controller_1 = __importDefault(require("../controllers/user.controlle
 const auth_middleware_1 = require("../middlewares/auth.middleware");
 const rbac_middleware_1 = require("../middlewares/rbac.middleware");
 const router = (0, express_1.Router)();
+// Route pour l'utilisateur actuel (authentifié)
+router.get('/me', auth_middleware_1.authenticateToken, user_controller_1.default.getCurrentUser.bind(user_controller_1.default));
 // Toutes les routes nécessitent une authentification ADMIN
 router.get('/', auth_middleware_1.authenticateToken, rbac_middleware_1.canPerformAdminActions, user_controller_1.default.getAllUsers.bind(user_controller_1.default));
 router.get('/:id', auth_middleware_1.authenticateToken, rbac_middleware_1.canPerformAdminActions, user_controller_1.default.getUserById.bind(user_controller_1.default));
 router.put('/:id/vip', auth_middleware_1.authenticateToken, rbac_middleware_1.canPerformAdminActions, user_controller_1.default.updateVipStatus.bind(user_controller_1.default));
 router.put('/:id/role', auth_middleware_1.authenticateToken, rbac_middleware_1.canPerformAdminActions, user_controller_1.default.updateUserRole.bind(user_controller_1.default));
 router.put('/:id/status', auth_middleware_1.authenticateToken, rbac_middleware_1.canPerformAdminActions, user_controller_1.default.updateUserStatus.bind(user_controller_1.default));
+// Routes pour les crédits - accessibles aux utilisateurs authentifiés
+router.get('/credits/transactions', auth_middleware_1.authenticateToken, user_controller_1.default.getCreditsTransactions.bind(user_controller_1.default));
+router.post('/credits/buy', auth_middleware_1.authenticateToken, user_controller_1.default.buyCredits.bind(user_controller_1.default));
+router.post('/:id/credits/use-for-vip', auth_middleware_1.authenticateToken, user_controller_1.default.useCreditsForVip.bind(user_controller_1.default));
 exports.default = router;
 //# sourceMappingURL=user.routes.js.map

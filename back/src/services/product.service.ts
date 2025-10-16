@@ -1,6 +1,7 @@
 import { PrismaClient, ProductStatus } from '@prisma/client';
 import CloudinaryUtil from '../utils/cloudinary.util';
 import EmailService from '../utils/email.util';
+import CreditsService from './credits.service';
 
 const prisma = new PrismaClient();
 
@@ -9,6 +10,8 @@ export class ProductService {
   async createProduct(data: {
     title: string;
     description: string;
+    category?: string;
+    price?: number;
     sellerId: string;
     photos: { url: string; publicId: string }[];
   }) {
@@ -202,11 +205,16 @@ export class ProductService {
       throw new Error('Product not found');
     }
 
+    const publishedAt = new Date();
+    const expiresAt = new Date(publishedAt.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 jours
+
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
         status: ProductStatus.APPROVED,
-        publishedAt: new Date(),
+        publishedAt,
+        expiresAt, // Définit la date d'expiration
+        isVip: false, // VIP par défaut false, peut être acheté séparément
       },
       include: {
         photos: true,
@@ -345,14 +353,13 @@ export class ProductService {
 
   // Marquer les produits expirés (à exécuter par un cron job)
   async expireOldProducts() {
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const now = new Date();
 
     const expiredProducts = await prisma.product.findMany({
       where: {
         status: ProductStatus.APPROVED,
-        publishedAt: {
-          lte: oneWeekAgo,
+        expiresAt: {
+          lte: now,
         },
       },
       include: {
@@ -370,12 +377,25 @@ export class ProductService {
     await prisma.product.updateMany({
       where: {
         status: ProductStatus.APPROVED,
-        publishedAt: {
-          lte: oneWeekAgo,
+        expiresAt: {
+          lte: now,
         },
       },
       data: {
         status: ProductStatus.EXPIRED,
+      },
+    });
+
+    // Désactiver VIP expiré
+    await prisma.product.updateMany({
+      where: {
+        isVip: true,
+        vipUntil: {
+          lte: now,
+        },
+      },
+      data: {
+        isVip: false,
       },
     });
 
@@ -396,18 +416,15 @@ export class ProductService {
 
   // Envoyer des notifications pour les produits qui vont expirer
   async notifyExpiringProducts() {
-    const sixDaysAgo = new Date();
-    sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
-
-    const fiveDaysAgo = new Date();
-    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     const expiringProducts = await prisma.product.findMany({
       where: {
         status: ProductStatus.APPROVED,
-        publishedAt: {
-          gte: sixDaysAgo,
-          lte: fiveDaysAgo,
+        expiresAt: {
+          lte: tomorrow,
+          gt: new Date(), // Pas encore expiré
         },
       },
       include: {
@@ -445,6 +462,114 @@ export class ProductService {
     }
 
     return { notified: expiringProducts.length };
+  }
+
+  // Rendre un produit VIP (vendeur authentifié)
+  async upgradeVip(productId: string, userId: string) {
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { seller: true },
+    });
+
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    if (product.sellerId !== userId) {
+      throw new Error('Unauthorized: You can only upgrade your own products');
+    }
+
+    if (product.status !== ProductStatus.APPROVED) {
+      throw new Error('Product must be approved to upgrade to VIP');
+    }
+
+    if (product.isVip) {
+      throw new Error('Product is already VIP');
+    }
+
+    const VIP_COST = 10; // Coût en crédits pour VIP 30 jours
+    const vipUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 jours
+
+    // Vérifier et déduire les crédits
+    await CreditsService.deductCredits(userId, VIP_COST, `VIP upgrade for product "${product.title}"`, productId);
+
+    // Mettre à jour le produit
+    const updatedProduct = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        isVip: true,
+        vipUntil,
+      },
+      include: {
+        photos: true,
+        seller: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true
+          }
+        }
+      },
+    });
+
+    return updatedProduct;
+  }
+
+  // Étendre la durée d'un produit (vendeur authentifié)
+  async extendDuration(productId: string, userId: string, extraDays: number) {
+    if (extraDays <= 0 || extraDays > 365) {
+      throw new Error('Extra days must be between 1 and 365');
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { seller: true },
+    });
+
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    if (product.sellerId !== userId) {
+      throw new Error('Unauthorized: You can only extend your own products');
+    }
+
+    if (product.status !== ProductStatus.APPROVED) {
+      throw new Error('Product must be approved to extend duration');
+    }
+
+    const EXTENSION_COST_PER_DAY = 5; // Coût par jour en crédits
+    const totalCost = extraDays * EXTENSION_COST_PER_DAY;
+    const extensionMs = extraDays * 24 * 60 * 60 * 1000; // Conversion en ms
+
+    // Vérifier et déduire les crédits
+    await CreditsService.deductCredits(userId, totalCost, `Duration extension (${extraDays} days) for product "${product.title}"`, productId);
+
+    // Étendre la durée
+    const newExpiresAt = new Date((product.expiresAt || new Date()).getTime() + extensionMs);
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        expiresAt: newExpiresAt,
+      },
+      include: {
+        photos: true,
+        seller: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true
+          }
+        }
+      },
+    });
+
+    return updatedProduct;
   }
 }
 

@@ -5,6 +5,13 @@ import { requireRole, canPerformAdminActions } from '../middlewares/rbac.middlew
 
 const router = Router();
 
+// Route pour l'utilisateur actuel (authentifié)
+router.get(
+  '/me',
+  authenticateToken,
+  userController.getCurrentUser.bind(userController)
+);
+
 // Toutes les routes nécessitent une authentification ADMIN
 router.get(
   '/',
@@ -42,11 +49,19 @@ router.put(
 );
 
 // Routes pour les crédits - accessibles aux utilisateurs authentifiés
+router.get(
+  '/credits/transactions',
+  authenticateToken,
+  userController.getCreditsTransactions.bind(userController)
+);
+
 router.post(
-  '/:id/credits/buy',
+  '/credits/buy',
   authenticateToken,
   userController.buyCredits.bind(userController)
 );
+
+
 
 router.post(
   '/:id/credits/use-for-vip',

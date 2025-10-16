@@ -13,6 +13,7 @@ const product_routes_1 = __importDefault(require("./routes/product.routes"));
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const seller_routes_1 = __importDefault(require("./routes/seller.routes"));
+const credits_routes_1 = __importDefault(require("./routes/credits.routes"));
 const cron_util_1 = require("./utils/cron.util");
 dotenv_1.default.config();
 console.log('Server starting...');
@@ -69,6 +70,7 @@ app.use('/api/sellers', seller_routes_1.default);
 app.use('/api/products', product_routes_1.default);
 app.use('/api/notifications', notification_routes_1.default);
 app.use('/api/users', user_routes_1.default);
+app.use('/api/credits', credits_routes_1.default);
 console.log('API routes configured');
 // Initialiser les tâches cron
 cron_util_1.CronService.init();

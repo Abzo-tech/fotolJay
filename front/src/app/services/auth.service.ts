@@ -95,18 +95,11 @@ export class AuthService {
   }
 
   // Crédits
-  buyCredits(amount: number): Promise<User> {
+  buyCredits(packageType: string): Promise<{ paymentUrl: string; token: string }> {
     return new Promise((resolve, reject) => {
-      const userId = this.currentUser()?.id;
-      if (!userId) {
-        reject(new Error('User not authenticated'));
-        return;
-      }
-
-      this.apiService.buyCredits(userId, amount).subscribe({
-        next: (user: User) => {
-          this.currentUser.set(user);
-          resolve(user);
+      this.apiService.buyCredits(packageType).subscribe({
+        next: (response) => {
+          resolve(response);
         },
         error: (error: any) => {
           reject(error);
@@ -115,18 +108,24 @@ export class AuthService {
     });
   }
 
-  useCreditsForVip(): Promise<User> {
+  getCreditsBalance(): Promise<number> {
     return new Promise((resolve, reject) => {
-      const userId = this.currentUser()?.id;
-      if (!userId) {
-        reject(new Error('User not authenticated'));
-        return;
-      }
+      this.apiService.getCreditsBalance().subscribe({
+        next: (response) => {
+          resolve(response.balance);
+        },
+        error: (error: any) => {
+          reject(error);
+        }
+      });
+    });
+  }
 
-      this.apiService.useCreditsForVip(userId).subscribe({
-        next: (user: User) => {
-          this.currentUser.set(user);
-          resolve(user);
+  getCreditsTransactions(page = 1, limit = 20): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.apiService.getCreditsTransactions(page, limit).subscribe({
+        next: (response) => {
+          resolve(response);
         },
         error: (error: any) => {
           reject(error);

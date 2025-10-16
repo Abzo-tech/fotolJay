@@ -83,10 +83,9 @@ export class ApiService {
 
   getCurrentUser(): Observable<User> {
     return this.http
-      .get<{ user: User }>(`${this.apiUrl}/auth/me`, {
+      .get<User>(`${this.apiUrl}/users/me`, {
         headers: this.getHeaders(true),
-      })
-      .pipe(map((response) => response.user));
+      });
   }
 
   /** ===================== 🧑‍⚖️ MODÉRATION (ADMIN) ===================== */
@@ -132,19 +131,49 @@ export class ApiService {
   }
 
   /** ===================== 💰 CRÉDITS ===================== */
-  buyCredits(userId: string, amount: number): Observable<User> {
-    return this.http.post<User>(
-      `${this.apiUrl}/users/${userId}/credits/buy`,
-      { amount },
+  getCreditsBalance(): Observable<{ balance: number }> {
+    return this.http.get<{ balance: number }>(`${this.apiUrl}/credits/balance`, {
+      headers: this.getHeaders(true),
+    });
+  }
+
+  buyCredits(packageType: string): Observable<{ paymentUrl: string; token: string }> {
+    return this.http.post<{ paymentUrl: string; token: string }>(
+      `${this.apiUrl}/credits/buy`,
+      { package: packageType },
       { headers: this.getHeaders(true) }
     );
   }
 
-  useCreditsForVip(userId: string): Observable<User> {
-    return this.http.post<User>(
-      `${this.apiUrl}/users/${userId}/credits/use-for-vip`,
+  getCreditsTransactions(page = 1, limit = 20): Observable<any> {
+    return this.http.get(`${this.apiUrl}/credits/transactions?page=${page}&limit=${limit}`, {
+      headers: this.getHeaders(true),
+    });
+  }
+
+  /** ===================== ⭐ VIP & EXTENSIONS ===================== */
+  upgradeProductToVip(productId: string): Observable<{ message: string; product: Product }> {
+    return this.http.post<{ message: string; product: Product }>(
+      `${this.apiUrl}/products/${productId}/upgrade-vip`,
       {},
       { headers: this.getHeaders(true) }
+    );
+  }
+
+  extendProductDuration(productId: string, extraDays: number): Observable<{ message: string; product: Product }> {
+    return this.http.post<{ message: string; product: Product }>(
+      `${this.apiUrl}/products/${productId}/extend`,
+      { extraDays },
+      { headers: this.getHeaders(true) }
+    );
+  }
+
+  /** ===================== 🤖 ANALYSE IA ===================== */
+  analyzeImage(formData: FormData): Observable<{ title: string; description: string; category: string; suggestedPrice: number }> {
+    return this.http.post<{ title: string; description: string; category: string; suggestedPrice: number }>(
+      `${this.apiUrl}/ai/analyze`,
+      formData,
+      { headers: this.getHeaders(true) } // Auth required
     );
   }
 

@@ -37,12 +37,13 @@ const upload = (0, multer_1.default)({
 });
 // Routes publiques (pas d'authentification requise)
 router.get('/', product_controller_1.default.getProducts.bind(product_controller_1.default));
+// Récupérer les produits du vendeur actuellement connecté
+router.get('/seller', auth_middleware_1.authenticateToken, product_controller_1.default.getCurrentSellerProducts.bind(product_controller_1.default));
+// Routes publiques (pas d'authentification requise)
 router.get('/:id', product_controller_1.default.getProductById.bind(product_controller_1.default));
 // Publier un produit (authentification requise)
 router.post('/', auth_middleware_1.authenticateToken, upload.array('photos', 5), // Maximum 5 photos
 product_controller_1.default.createProduct.bind(product_controller_1.default));
-// Récupérer les produits du vendeur actuellement connecté
-router.get('/seller', auth_middleware_1.authenticateToken, product_controller_1.default.getCurrentSellerProducts.bind(product_controller_1.default));
 // Routes de modération (MODERATOR ou ADMIN)
 router.get('/moderation/pending', auth_middleware_1.authenticateToken, rbac_middleware_1.requireModerator, product_controller_1.default.getPendingProducts.bind(product_controller_1.default));
 // Approuver un produit (MODERATOR ou ADMIN)
@@ -51,5 +52,8 @@ router.post('/:id/approve', auth_middleware_1.authenticateToken, rbac_middleware
 router.post('/:id/reject', auth_middleware_1.authenticateToken, rbac_middleware_1.requireModerator, product_controller_1.default.rejectProduct.bind(product_controller_1.default));
 // Supprimer un produit (ADMIN uniquement)
 router.delete('/:id', auth_middleware_1.authenticateToken, rbac_middleware_1.canPerformAdminActions, product_controller_1.default.deleteProduct.bind(product_controller_1.default));
+// Routes pour les vendeurs (upgrade VIP et extension durée)
+router.post('/:id/upgrade-vip', auth_middleware_1.authenticateToken, rbac_middleware_1.requireSeller, product_controller_1.default.upgradeVip.bind(product_controller_1.default));
+router.post('/:id/extend', auth_middleware_1.authenticateToken, rbac_middleware_1.requireSeller, product_controller_1.default.extendDuration.bind(product_controller_1.default));
 exports.default = router;
 //# sourceMappingURL=product.routes.js.map

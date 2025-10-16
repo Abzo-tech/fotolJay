@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import productController from '../controllers/product.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
-import { requireRole, requireModerator, canPerformAdminActions } from '../middlewares/rbac.middleware';
+import { requireRole, requireModerator, canPerformAdminActions, requireSeller } from '../middlewares/rbac.middleware';
 import { UserRole } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
@@ -87,6 +87,21 @@ router.delete(
   authenticateToken,
   canPerformAdminActions,
   productController.deleteProduct.bind(productController)
+);
+
+// Routes pour les vendeurs (upgrade VIP et extension durée)
+router.post(
+  '/:id/upgrade-vip',
+  authenticateToken,
+  requireSeller,
+  productController.upgradeVip.bind(productController)
+);
+
+router.post(
+  '/:id/extend',
+  authenticateToken,
+  requireSeller,
+  productController.extendDuration.bind(productController)
 );
 
 export default router;

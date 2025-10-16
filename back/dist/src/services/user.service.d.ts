@@ -58,9 +58,32 @@ export declare class UserService {
         phone: string;
         role: import(".prisma/client").$Enums.UserRole;
         isVip: boolean;
+        credits: number;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
+    }>;
+    buyCredits(userId: string, amount: number): Promise<{
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        phone: string;
+        role: import(".prisma/client").$Enums.UserRole;
+        isVip: boolean;
+        credits: number;
+        isActive: boolean;
+    }>;
+    useCreditsForVip(userId: string): Promise<{
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        phone: string;
+        role: import(".prisma/client").$Enums.UserRole;
+        isVip: boolean;
+        credits: number;
+        isActive: boolean;
     }>;
 }
 declare const _default: UserService;
