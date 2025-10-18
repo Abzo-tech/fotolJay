@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `products` ADD COLUMN `category` VARCHAR(191) NOT NULL DEFAULT 'Other',
+    ADD COLUMN `price` DOUBLE NOT NULL DEFAULT 0;

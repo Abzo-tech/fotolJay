@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, PLATFORM_ID, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, PLATFORM_ID, inject, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -12,11 +12,11 @@ import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule, NoDownloadDirective, ThemeSelectorComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule, NoDownloadDirective],
   templateUrl: './home.html',
   styleUrls: ['./home.css']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   public apiService = inject(ApiService);
   public authService = inject(AuthService);
@@ -36,12 +36,20 @@ export class HomeComponent implements OnInit {
   readonly Coins = Coins;
 
   products = signal<Product[]>([]);
+  topProducts = signal<Product[]>([]);
   loading = signal<boolean>(false);
   searchTerm = signal<string>('');
+  minPrice = signal<number | null>(null);
+  maxPrice = signal<number | null>(null);
   currentPage = signal<number>(1);
   selectedProduct = signal<Product | null>(null);
   showModal = signal<boolean>(false);
   mobileMenuOpen = signal<boolean>(false);
+
+  @ViewChild('carousel') carousel!: ElementRef<HTMLDivElement>;
+  private autoScrollInterval: ReturnType<typeof setInterval> | undefined;
+  private vipPage = 1;
+  private cardWidth = 300; // Approximate card width including gap
 
 
 
@@ -50,15 +58,28 @@ export class HomeComponent implements OnInit {
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.loadProducts();
+      this.loadTopProducts();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    this.startAutoScroll();
+  }
+
+  ngOnDestroy(): void {
+    if (this.autoScrollInterval) {
+      clearInterval(this.autoScrollInterval);
     }
   }
 
   loadProducts(): void {
     this.loading.set(true);
-    
+
     this.apiService.getProducts({
       status: 'APPROVED',
       search: this.searchTerm(),
+      minPrice: this.minPrice() ?? undefined,
+      maxPrice: this.maxPrice() ?? undefined,
       page: this.currentPage(),
       limit: 12
     }).subscribe({
@@ -71,6 +92,49 @@ export class HomeComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  loadTopProducts(): void {
+    this.apiService.getProducts({
+      status: 'APPROVED',
+      isVip: true,
+      sortBy: 'views',
+      sortOrder: 'desc',
+      limit: 10,
+      page: this.vipPage
+    }).subscribe({
+      next: (response) => {
+        this.topProducts.update(current => [...current, ...response.products]);
+      },
+      error: (error) => {
+        console.error('Erreur chargement produits VIP:', error);
+      }
+    });
+  }
+
+  loadMoreVIP(): void {
+    this.vipPage++;
+    this.loadTopProducts();
+  }
+
+  private startAutoScroll(): void {
+    if (!this.carousel) return;
+
+    this.autoScrollInterval = setInterval(() => {
+      if (this.carousel.nativeElement) {
+        const scrollLeft = this.carousel.nativeElement.scrollLeft;
+        const maxScroll = this.carousel.nativeElement.scrollWidth - this.carousel.nativeElement.clientWidth;
+        this.carousel.nativeElement.scrollTo({
+          left: scrollLeft + this.cardWidth,
+          behavior: 'smooth'
+        });
+        if (scrollLeft + this.cardWidth >= maxScroll) {
+          setTimeout(() => {
+            this.carousel.nativeElement.scrollTo({ left: 0, behavior: 'smooth' });
+          }, 500);
+        }
+      }
+    }, 3000);
   }
 
   onSearch(): void {
@@ -119,7 +183,7 @@ export class HomeComponent implements OnInit {
     if (!product) return;
 
     this.apiService.upgradeProductToVip(product.id).subscribe({
-      next: (response) => {
+      next: (_response) => {
         this.toastService.success('Produit mis à niveau VIP avec succès !');
         this.closeModal();
         // Refresh products to show updated status
@@ -130,5 +194,17 @@ export class HomeComponent implements OnInit {
         console.error('Upgrade to VIP error:', error);
       }
     });
+  }
+
+  onPriceFilter(): void {
+    this.currentPage.set(1);
+    this.loadProducts();
+  }
+
+  clearPriceFilter(): void {
+    this.minPrice.set(null);
+    this.maxPrice.set(null);
+    this.currentPage.set(1);
+    this.loadProducts();
   }
 }

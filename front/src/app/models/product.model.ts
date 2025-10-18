@@ -24,6 +24,8 @@ export interface Product {
   id: string;
   title: string;
   description: string;
+  category: string;
+  price?: number;
   status: ProductStatus;
   views: number;
   isVip: boolean;
@@ -66,4 +68,22 @@ export interface PaginatedResponse<T> {
 export interface LoginResponse {
   token: string;
   user: User;
+}
+
+export interface CreditTransaction {
+  id: string;
+  type: 'PURCHASE' | 'DEDUCTION';
+  amount: number;
+  description: string;
+  createdAt: string;
+}
+
+export interface CreditsTransactionsResponse {
+  transactions: CreditTransaction[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }

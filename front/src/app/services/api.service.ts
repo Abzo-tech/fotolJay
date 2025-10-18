@@ -1,9 +1,9 @@
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Product, PaginatedResponse, LoginResponse, User } from '../models/product.model';
+import { Product, PaginatedResponse, LoginResponse, User, CreditsTransactionsResponse } from '../models/product.model';
 
 @Injectable({
   providedIn: 'root',
@@ -35,15 +35,25 @@ export class ApiService {
   getProducts(filters?: {
     status?: string;
     search?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
+    sortOrder?: string;
     page?: number;
     limit?: number;
+    isVip?: boolean;
   }): Observable<PaginatedResponse<Product>> {
-    const params: Record<string, string> = {};
+    let params = new HttpParams();
     if (filters) {
-      if (filters.status) params['status'] = filters.status;
-      if (filters.search) params['search'] = filters.search;
-      if (filters.page) params['page'] = filters.page.toString();
-      if (filters.limit) params['limit'] = filters.limit.toString();
+      if (filters.status) params = params.set('status', filters.status);
+      if (filters.search) params = params.set('search', filters.search);
+      if (filters.minPrice !== undefined && filters.minPrice !== null) params = params.set('minPrice', filters.minPrice.toString());
+      if (filters.maxPrice !== undefined && filters.maxPrice !== null) params = params.set('maxPrice', filters.maxPrice.toString());
+      if (filters.sortBy) params = params.set('sortBy', filters.sortBy);
+      if (filters.sortOrder) params = params.set('sortOrder', filters.sortOrder);
+      if (filters.page) params = params.set('page', filters.page.toString());
+      if (filters.limit) params = params.set('limit', filters.limit.toString());
+      if (filters.isVip !== undefined) params = params.set('isVip', filters.isVip.toString());
     }
 
     return this.http.get<PaginatedResponse<Product>>(`${this.apiUrl}/products`, { params });
@@ -90,9 +100,12 @@ export class ApiService {
 
   /** ===================== 🧑‍⚖️ MODÉRATION (ADMIN) ===================== */
   getPendingProducts(page = 1, limit = 20): Observable<PaginatedResponse<Product>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
     return this.http.get<PaginatedResponse<Product>>(
-      `${this.apiUrl}/products/moderation/pending?page=${page}&limit=${limit}`,
-      { headers: this.getHeaders(true) }
+      `${this.apiUrl}/products/moderation/pending`,
+      { headers: this.getHeaders(true), params }
     );
   }
 
@@ -145,9 +158,13 @@ export class ApiService {
     );
   }
 
-  getCreditsTransactions(page = 1, limit = 20): Observable<any> {
-    return this.http.get(`${this.apiUrl}/credits/transactions?page=${page}&limit=${limit}`, {
+  getCreditsTransactions(page = 1, limit = 20): Observable<CreditsTransactionsResponse> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+    return this.http.get<CreditsTransactionsResponse>(`${this.apiUrl}/credits/transactions`, {
       headers: this.getHeaders(true),
+      params
     });
   }
 
