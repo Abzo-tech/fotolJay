@@ -14,84 +14,24 @@ export interface Theme {
 
 export const THEMES: Theme[] = [
   {
-    id: 'default',
-    name: 'Défaut',
-    primary: '#3b82f6',
-    secondary: '#8b5cf6',
-    accent: '#f59e0b',
+    id: 'light',
+    name: 'Clair',
+    primary: '#000000',
+    secondary: '#1a1a1a',
+    accent: '#333333',
     background: '#ffffff',
     surface: '#f9fafb',
     text: '#111827'
   },
   {
-    id: 'blackwhite',
-    name: 'Noir & Blanc',
-    primary: '#000000',
-    secondary: '#1a1a1a',
-    accent: '#ffffff',
-    background: '#000000',
-    surface: '#0a0a0a',
-    text: '#ffffff'
-  },
-  {
     id: 'dark',
     name: 'Sombre',
-    primary: '#60a5fa',
-    secondary: '#a78bfa',
+    primary: '#fbbf24',
+    secondary: '#f59e0b',
     accent: '#fbbf24',
-    background: '#111827',
-    surface: '#1f2937',
-    text: '#f9fafb'
-  },
-  {
-    id: 'ocean',
-    name: 'Océan',
-    primary: '#06b6d4',
-    secondary: '#0891b2',
-    accent: '#14b8a6',
-    background: '#ecfeff',
-    surface: '#cffafe',
-    text: '#164e63'
-  },
-  {
-    id: 'sunset',
-    name: 'Coucher de soleil',
-    primary: '#f97316',
-    secondary: '#ea580c',
-    accent: '#fb923c',
-    background: '#fff7ed',
-    surface: '#ffedd5',
-    text: '#7c2d12'
-  },
-  {
-    id: 'forest',
-    name: 'Forêt',
-    primary: '#10b981',
-    secondary: '#059669',
-    accent: '#34d399',
-    background: '#f0fdf4',
-    surface: '#dcfce7',
-    text: '#064e3b'
-  },
-  {
-    id: 'purple',
-    name: 'Violet',
-    primary: '#a855f7',
-    secondary: '#9333ea',
-    accent: '#c084fc',
-    background: '#faf5ff',
-    surface: '#f3e8ff',
-    text: '#581c87'
-  },
-  {
-    id: 'rose',
-    name: 'Rose',
-    primary: '#f43f5e',
-    secondary: '#e11d48',
-    accent: '#fb7185',
-    background: '#fff1f2',
-    surface: '#ffe4e6',
-    text: '#881337'
+    background: '#000000',
+    surface: '#1a1a1a',
+    text: '#ffffff'
   }
 ];
 
@@ -107,10 +47,10 @@ export class ThemeService {
 
   constructor() {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    
+
     if (this.isBrowser) {
       this.loadTheme();
-      
+
       effect(() => {
         this.applyTheme(this.currentTheme());
       });
@@ -127,6 +67,12 @@ export class ThemeService {
     }
   }
 
+  toggleTheme() {
+    const currentThemeId = this.currentTheme().id;
+    const newThemeId = currentThemeId === 'light' ? 'dark' : 'light';
+    this.setTheme(newThemeId);
+  }
+
   setCustomColors(colors: Partial<Theme>) {
     const customTheme: Theme = {
       ...this.currentTheme(),
@@ -136,7 +82,7 @@ export class ThemeService {
     };
     this.currentTheme.set(customTheme);
     this.customColors.set(colors);
-    
+
     if (this.isBrowser) {
       localStorage.setItem('theme', 'custom');
       localStorage.setItem('customColors', JSON.stringify(colors));
@@ -147,7 +93,7 @@ export class ThemeService {
     if (!this.isBrowser) return;
 
     const savedThemeId = localStorage.getItem('theme');
-    
+
     if (savedThemeId === 'custom') {
       const savedColors = localStorage.getItem('customColors');
       if (savedColors) {
@@ -228,5 +174,9 @@ export class ThemeService {
 
   getAvailableThemes(): Theme[] {
     return THEMES;
+  }
+
+  isDarkMode(): boolean {
+    return this.currentTheme().id === 'dark';
   }
 }

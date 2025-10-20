@@ -167,23 +167,12 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mobileMenuOpen.set(false);
   }
 
-  openThemeSelector(): void {
-    if (this.themeSelector) {
-      this.themeSelector.open();
-      this.closeMobileMenu(); // Fermer le menu mobile après avoir ouvert le sélecteur
-    } else {
-      console.error('Theme selector not found');
-    }
-  }
-
-
-
   upgradeToVip(): void {
     const product = this.selectedProduct();
     if (!product) return;
 
     this.apiService.upgradeProductToVip(product.id).subscribe({
-      next: (_response) => {
+      next: () => {
         this.toastService.success('Produit mis à niveau VIP avec succès !');
         this.closeModal();
         // Refresh products to show updated status

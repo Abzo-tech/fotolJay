@@ -2,13 +2,7 @@
 
 :root {
   /* Variables de thème - définies dynamiquement par ThemeService */
-  --primary-color: #3b82f6;
-  --primary-hover: #2563eb;
-  --secondary-color: #8b5cf6;
-  --accent-color: #f59e0b;
-  --background-color: #ffffff;
-  --surface-color: #f9fafb;
-  --text-color: #111827;
+  /* Supprimé les couleurs codées en dur - gérées par ThemeService */
 
   /* Variables grises pour thèmes sombres/clairs */
   --gray-50: #f9fafb;
@@ -179,7 +173,7 @@ body {
 .form-textarea:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
 .form-textarea {
@@ -251,8 +245,8 @@ body {
 }
 
 .badge-vip {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: var(--warning-color);
+  color: var(--gray-900);
 }
 
 /* Loading */
